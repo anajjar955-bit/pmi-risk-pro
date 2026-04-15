@@ -1,1 +1,1 @@
-web: python seed_data.py && gunicorn backend.main_v2:app -w 1 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --timeout 120
+web: gunicorn backend.main_v2:app -w 1 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT
