@@ -1,0 +1,1442 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PMI Risk Pro — منصة إدارة المخاطر</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --primary: #1B4F72; --primary-light: #2E86AB; --primary-dark: #0D2F47;
+  --accent: #F39C12; --accent2: #27AE60; --danger: #E74C3C;
+  --bg: #F0F3F7; --sidebar-bg: #0D2F47; --card-bg: #FFFFFF;
+  --text: #1A2535; --text-muted: #5A6A82; --border: #DDE3EC;
+  --shadow: 0 2px 12px rgba(27,79,114,0.08);
+  --radius: 12px; --sidebar-w: 240px;
+  --high: #E74C3C; --medium: #F39C12; --low: #27AE60; --critical: #8E44AD;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Cairo', Tahoma, sans-serif; background: var(--bg); color: var(--text); direction: rtl; }
+a { text-decoration: none; color: inherit; }
+
+/* ── LOADING ── */
+#loading-screen {
+  position: fixed; inset: 0; background: var(--primary-dark);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  z-index: 9999; transition: opacity .4s;
+}
+#loading-screen h1 { color: #fff; font-size: 28px; font-weight: 900; margin-bottom: 8px; }
+#loading-screen p { color: rgba(255,255,255,.6); font-size: 14px; }
+.spinner { width: 48px; height: 48px; border: 4px solid rgba(255,255,255,.2); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; margin-bottom: 20px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── AUTH SCREEN ── */
+#auth-screen {
+  position: fixed; inset: 0; background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+  display: none; align-items: center; justify-content: center; z-index: 1000;
+}
+.auth-card {
+  background: #fff; border-radius: 20px; padding: 40px; width: 440px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.3); max-width: 95vw;
+}
+.auth-logo { text-align: center; margin-bottom: 28px; }
+.auth-logo h1 { font-size: 22px; font-weight: 900; color: var(--primary-dark); }
+.auth-logo p { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+.auth-tabs { display: flex; border-radius: 10px; background: var(--bg); padding: 4px; margin-bottom: 24px; gap: 4px; }
+.auth-tab { flex: 1; padding: 8px; text-align: center; font-size: 14px; font-weight: 600; border-radius: 8px; cursor: pointer; color: var(--text-muted); transition: all .2s; }
+.auth-tab.active { background: var(--primary); color: #fff; }
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
+.form-group input { width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-family: 'Cairo', sans-serif; font-size: 14px; color: var(--text); background: #fff; transition: border-color .2s; direction: ltr; }
+.form-group input:focus { outline: none; border-color: var(--primary-light); }
+.btn { padding: 12px 24px; border-radius: 10px; font-family: 'Cairo', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; border: none; transition: all .2s; }
+.btn-primary { background: var(--primary); color: #fff; width: 100%; }
+.btn-primary:hover { background: var(--primary-light); }
+.btn-sm { padding: 7px 16px; font-size: 13px; }
+.btn-success { background: var(--accent2); color: #fff; }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-outline { background: transparent; border: 1.5px solid var(--primary); color: var(--primary); }
+.btn-accent { background: var(--accent); color: #fff; }
+.auth-note { font-size: 12px; color: var(--text-muted); text-align: center; margin-top: 16px; line-height: 1.8; }
+.auth-note a { color: var(--primary-light); font-weight: 600; }
+
+/* ── ACTIVATION SCREEN ── */
+#activation-screen {
+  position: fixed; inset: 0; background: linear-gradient(135deg, var(--primary-dark) 0%, #1A5276 100%);
+  display: none; align-items: center; justify-content: center; z-index: 900; flex-direction: column; gap: 24px;
+}
+.activation-card { background: #fff; border-radius: 20px; padding: 40px; width: 520px; max-width: 95vw; text-align: center; }
+.activation-card h2 { font-size: 22px; font-weight: 900; color: var(--primary-dark); margin-bottom: 8px; }
+.activation-card p { font-size: 14px; color: var(--text-muted); line-height: 1.8; margin-bottom: 24px; }
+.activation-steps { display: flex; flex-direction: column; gap: 12px; text-align: right; margin-bottom: 24px; }
+.act-step { display: flex; gap: 12px; align-items: flex-start; background: var(--bg); padding: 14px; border-radius: 10px; }
+.act-num { background: var(--primary); color: #fff; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+.act-step-text { font-size: 14px; line-height: 1.7; }
+.act-step-text strong { display: block; font-size: 15px; color: var(--text); margin-bottom: 2px; }
+.code-input { font-family: monospace; font-size: 22px; letter-spacing: 6px; text-align: center; direction: ltr; border: 2px dashed var(--primary); border-radius: 12px; padding: 16px; width: 100%; background: #f5f7fa; }
+.paypal-btn { display: inline-flex; align-items: center; gap: 8px; background: #003087; color: #fff; padding: 14px 28px; border-radius: 10px; font-weight: 700; font-size: 15px; text-decoration: none; transition: background .2s; margin-bottom: 12px; }
+.paypal-btn:hover { background: #0070ba; }
+.wa-btn { display: inline-flex; align-items: center; gap: 8px; background: #25D366; color: #fff; padding: 14px 28px; border-radius: 10px; font-weight: 700; font-size: 15px; text-decoration: none; transition: background .2s; }
+.wa-btn:hover { background: #1ebe57; }
+
+/* ── LAYOUT ── */
+#app { display: flex; height: 100vh; overflow: hidden; }
+#sidebar {
+  width: var(--sidebar-w); background: var(--sidebar-bg); display: flex;
+  flex-direction: column; flex-shrink: 0; position: relative; z-index: 10;
+  box-shadow: 2px 0 16px rgba(0,0,0,.2);
+}
+.sidebar-logo { padding: 24px 20px 16px; border-bottom: 1px solid rgba(255,255,255,.08); }
+.sidebar-logo h1 { color: #fff; font-size: 16px; font-weight: 900; line-height: 1.3; }
+.sidebar-logo span { color: var(--accent); }
+.sidebar-project { padding: 12px 16px; margin: 12px; background: rgba(255,255,255,.06); border-radius: 10px; }
+.sidebar-project label { font-size: 10px; color: rgba(255,255,255,.4); text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 6px; }
+.sidebar-project select { width: 100%; background: transparent; color: rgba(255,255,255,.85); border: none; font-family: 'Cairo', sans-serif; font-size: 13px; cursor: pointer; }
+.sidebar-project select option { background: var(--primary-dark); color: #fff; }
+.sidebar-nav { flex: 1; padding: 8px 0; overflow-y: auto; }
+.nav-section { padding: 8px 16px 4px; font-size: 10px; color: rgba(255,255,255,.3); text-transform: uppercase; letter-spacing: 1.5px; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px; padding: 10px 20px;
+  color: rgba(255,255,255,.6); font-size: 13px; cursor: pointer;
+  transition: all .2s; border-right: 3px solid transparent;
+}
+.nav-item:hover { background: rgba(255,255,255,.06); color: rgba(255,255,255,.9); }
+.nav-item.active { background: rgba(255,255,255,.1); color: #fff; border-right-color: var(--accent); }
+.nav-icon { width: 18px; text-align: center; font-size: 14px; }
+.sidebar-footer { padding: 16px; border-top: 1px solid rgba(255,255,255,.08); }
+.user-card { display: flex; align-items: center; gap: 10px; }
+.user-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--primary-light); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 14px; }
+.user-info { flex: 1; min-width: 0; }
+.user-name { color: #fff; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-role { color: rgba(255,255,255,.4); font-size: 11px; }
+.logout-btn { background: rgba(231,76,60,.2); color: #E74C3C; border: none; padding: 6px 10px; border-radius: 8px; cursor: pointer; font-size: 12px; font-family: 'Cairo', sans-serif; }
+
+/* ── MAIN CONTENT ── */
+#main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.topbar {
+  background: var(--card-bg); border-bottom: 1px solid var(--border);
+  padding: 0 28px; height: 60px; display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+}
+.topbar-title { font-size: 18px; font-weight: 700; color: var(--primary-dark); }
+.topbar-actions { display: flex; gap: 10px; align-items: center; }
+.page-content { flex: 1; overflow-y: auto; padding: 24px 28px; }
+
+/* ── CARDS ── */
+.card { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; }
+.card-title { font-size: 15px; font-weight: 700; color: var(--primary-dark); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.kpi-card { background: var(--card-bg); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); border-top: 4px solid; position: relative; overflow: hidden; }
+.kpi-card.danger { border-color: var(--danger); }
+.kpi-card.warning { border-color: var(--accent); }
+.kpi-card.success { border-color: var(--accent2); }
+.kpi-card.info { border-color: var(--primary-light); }
+.kpi-label { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; font-weight: 600; }
+.kpi-value { font-size: 32px; font-weight: 900; line-height: 1; }
+.kpi-card.danger .kpi-value { color: var(--danger); }
+.kpi-card.warning .kpi-value { color: var(--accent); }
+.kpi-card.success .kpi-value { color: var(--accent2); }
+.kpi-card.info .kpi-value { color: var(--primary-light); }
+.kpi-sub { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+/* ── HEATMAP ── */
+.heatmap-grid { display: grid; grid-template-columns: 32px repeat(5, 1fr); gap: 4px; }
+.heatmap-axis { font-size: 10px; color: var(--text-muted); display: flex; align-items: center; justify-content: center; }
+.heatmap-cell { aspect-ratio: 1; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; cursor: default; transition: transform .15s; }
+.heatmap-cell:hover { transform: scale(1.08); }
+.heat-1 { background: #A8D5A2; } .heat-2 { background: #F9D56E; }
+.heat-4 { background: #F0A500; } .heat-6 { background: #F07B3F; }
+.heat-9 { background: #D9534F; } .heat-12 { background: #8E44AD; }
+.heat-0 { background: #EFF2F5; color: #ccc; }
+
+/* ── TABLE ── */
+.table-wrapper { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th { background: var(--primary-dark); color: #fff; padding: 10px 12px; text-align: right; font-weight: 600; font-size: 12px; white-space: nowrap; }
+tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+tbody tr:hover { background: #f5f7fb; }
+tbody td { padding: 10px 12px; color: var(--text); }
+.badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+.badge-critical { background: #F3E6F8; color: #8E44AD; }
+.badge-high { background: #FDEDEC; color: #C0392B; }
+.badge-medium { background: #FEF9E7; color: #B7770D; }
+.badge-low { background: #EAFAF1; color: #1E8449; }
+.badge-opp { background: #EBF5FB; color: #1A5276; }
+.badge-success { background: #EAFAF1; color: #1E8449; }
+.badge-info { background: #EBF5FB; color: #1A5276; }
+.badge-warn { background: #FEF9E7; color: #B7770D; }
+.badge-danger { background: #FDEDEC; color: #C0392B; }
+.badge-neutral { background: #F2F3F4; color: #5A6A82; }
+
+/* ── PROGRESS ── */
+.progress-bar { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 4px; transition: width .4s ease; }
+.fill-success { background: var(--accent2); }
+.fill-warning { background: var(--accent); }
+.fill-danger { background: var(--danger); }
+
+/* ── MODAL ── */
+.modal-overlay { position: fixed; inset: 0; background: rgba(10,20,40,.55); z-index: 500; display: none; align-items: center; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal { background: #fff; border-radius: 16px; width: 720px; max-width: 96vw; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+.modal-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.modal-title { font-size: 17px; font-weight: 700; color: var(--primary-dark); }
+.modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted); width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+.modal-close:hover { background: var(--bg); }
+.modal-body { padding: 24px; overflow-y: auto; flex: 1; }
+.modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-start; gap: 10px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .5px; }
+.form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-family: 'Cairo', sans-serif; font-size: 13px; color: var(--text); background: #fff; transition: border-color .2s; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--primary-light); }
+.form-group textarea { resize: vertical; min-height: 70px; }
+.score-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+
+/* ── CHARTS ── */
+.chart-wrapper { position: relative; height: 200px; }
+.charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+/* ── WORKFLOW ── */
+.workflow-steps { display: flex; gap: 0; align-items: center; flex-wrap: wrap; }
+.wf-step { flex: 1; min-width: 100px; text-align: center; position: relative; }
+.wf-step::after { content: ''; position: absolute; top: 16px; left: -50%; width: 100%; height: 2px; background: var(--border); z-index: 0; }
+.wf-step:first-child::after { display: none; }
+.wf-dot { width: 32px; height: 32px; border-radius: 50%; margin: 0 auto 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; position: relative; z-index: 1; border: 2px solid var(--border); background: #fff; color: var(--text-muted); }
+.wf-step.done .wf-dot { background: var(--accent2); border-color: var(--accent2); color: #fff; }
+.wf-step.active .wf-dot { background: var(--primary); border-color: var(--primary); color: #fff; animation: pulse 1.5s infinite; }
+.wf-step.done::after { background: var(--accent2); }
+@keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(27,79,114,.4); } 50% { box-shadow: 0 0 0 8px rgba(27,79,114,0); } }
+.wf-label { font-size: 10px; color: var(--text-muted); }
+.wf-step.done .wf-label, .wf-step.active .wf-label { color: var(--primary-dark); font-weight: 700; }
+
+/* ── GRID LAYOUTS ── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+.mb-20 { margin-bottom: 20px; }
+.mb-24 { margin-bottom: 24px; }
+
+/* ── TOAST ── */
+#toast { position: fixed; bottom: 24px; left: 24px; z-index: 9000; display: flex; flex-direction: column; gap: 8px; }
+.toast-item { padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; color: #fff; box-shadow: 0 4px 16px rgba(0,0,0,.2); animation: slideIn .3s ease; max-width: 320px; }
+.toast-success { background: var(--accent2); }
+.toast-error { background: var(--danger); }
+.toast-info { background: var(--primary-light); }
+@keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* ── MISC ── */
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.empty-state { text-align: center; padding: 48px; color: var(--text-muted); }
+.empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+.spinner-sm { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; display: inline-block; }
+.tag { display: inline-block; background: var(--bg); color: var(--text-muted); padding: 2px 8px; border-radius: 4px; font-size: 11px; }
+.score-display { font-size: 22px; font-weight: 900; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  #sidebar { width: 56px; }
+  .nav-item span, .sidebar-logo h1, .sidebar-project, .sidebar-footer .user-info { display: none; }
+  .nav-item { justify-content: center; padding: 12px; }
+  .page-content { padding: 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Loading screen -->
+<div id="loading-screen">
+  <div class="spinner"></div>
+  <h1>PMI Risk Pro</h1>
+  <p>جارٍ تحميل المنصة...</p>
+</div>
+
+<!-- Auth screen -->
+<div id="auth-screen" style="display:none; position:fixed; inset:0; align-items:center; justify-content:center;">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <h1>🏗 PMI Risk Pro</h1>
+      <p>منصة إدارة المخاطر الهندسية الذكية</p>
+    </div>
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">تسجيل الدخول</div>
+      <div class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">حساب جديد</div>
+    </div>
+    <!-- Login -->
+    <div id="login-form">
+      <div class="form-group"><label>البريد الإلكتروني</label><input id="login-email" type="email" placeholder="email@example.com" dir="ltr"></div>
+      <div class="form-group"><label>كلمة المرور</label><input id="login-password" type="password" placeholder="••••••••" dir="ltr"></div>
+      <button class="btn btn-primary" onclick="doLogin()">تسجيل الدخول</button>
+    </div>
+    <!-- Register -->
+    <div id="register-form" style="display:none">
+      <div class="form-row">
+        <div class="form-group"><label>الاسم الكامل</label><input id="reg-name" type="text"></div>
+        <div class="form-group"><label>البريد الإلكتروني</label><input id="reg-email" type="email" dir="ltr"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>كلمة المرور</label><input id="reg-pass" type="password" dir="ltr"></div>
+        <div class="form-group"><label>رقم الجوال</label><input id="reg-mobile" type="text" dir="ltr"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>الشركة</label><input id="reg-company" type="text"></div>
+        <div class="form-group"><label>الدولة</label><input id="reg-country" type="text"></div>
+      </div>
+      <button class="btn btn-primary" onclick="doRegister()">إنشاء الحساب</button>
+    </div>
+    <p class="auth-note">للدعم: <a href="https://wa.me/201005394312" target="_blank">واتساب +201005394312</a></p>
+  </div>
+</div>
+
+<!-- Activation screen -->
+<div id="activation-screen" style="display:none; position:fixed; inset:0; align-items:center; justify-content:center; background:linear-gradient(135deg,#0D2F47,#1A5276); z-index:900;">
+  <div class="activation-card">
+    <h2>🔑 تفعيل الحساب</h2>
+    <p>حسابك غير مفعّل بعد. أكمل الخطوات التالية للحصول على وصول كامل للمنصة.</p>
+    <div class="activation-steps">
+      <div class="act-step">
+        <div class="act-num">١</div>
+        <div class="act-step-text">
+          <strong>أتمّ الدفع عبر PayPal</strong>
+          <a href="https://www.paypal.com/ncp/payment/H5MAQK4YA58WJ" target="_blank" class="paypal-btn" style="margin:8px 0 0; display:inline-flex;">
+            💳 ادفع الاشتراك الآن
+          </a>
+        </div>
+      </div>
+      <div class="act-step">
+        <div class="act-num">٢</div>
+        <div class="act-step-text">
+          <strong>أرسل إيصال الدفع عبر واتساب</strong>
+          <a href="https://wa.me/201005394312" target="_blank" class="wa-btn" style="margin:8px 0 0; display:inline-flex;">
+            💬 تواصل واتساب
+          </a>
+        </div>
+      </div>
+      <div class="act-step">
+        <div class="act-num">٣</div>
+        <div class="act-step-text">
+          <strong>أدخل كود التفعيل الذي ستتلقاه</strong>
+          <input class="code-input" id="activation-code" placeholder="XXXX-XXXX-XXXX-XXXX" maxlength="19">
+          <button class="btn btn-primary" style="margin-top:10px;width:100%" onclick="doVerifyCode()">✔ تحقق وفعّل الحساب</button>
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-outline" style="width:100%" onclick="doLogout()">تسجيل خروج</button>
+  </div>
+</div>
+
+<!-- Main App -->
+<div id="app" style="display:none">
+  <!-- Sidebar -->
+  <div id="sidebar">
+    <div class="sidebar-logo">
+      <h1>🏗 PMI<span> Risk Pro</span></h1>
+    </div>
+    <div class="sidebar-project">
+      <label>المشروع الحالي</label>
+      <select id="project-select" onchange="onProjectChange(this.value)">
+        <option value="">اختر مشروعاً...</option>
+      </select>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">الرئيسية</div>
+      <div class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')"><span class="nav-icon">📊</span><span>لوحة القيادة</span></div>
+      <div class="nav-section">المخاطر</div>
+      <div class="nav-item" data-page="register" onclick="navigate('register')"><span class="nav-icon">📋</span><span>سجل المخاطر</span></div>
+      <div class="nav-item" data-page="tracking" onclick="navigate('tracking')"><span class="nav-icon">🎯</span><span>متابعة الاستجابة</span></div>
+      <div class="nav-section">التخطيط</div>
+      <div class="nav-item" data-page="plan" onclick="navigate('plan')"><span class="nav-icon">📝</span><span>خطة إدارة المخاطر</span></div>
+      <div class="nav-item" data-page="raci" onclick="navigate('raci')"><span class="nav-icon">👥</span><span>مصفوفة RACI</span></div>
+      <div class="nav-item" data-page="process" onclick="navigate('process')"><span class="nav-icon">🔄</span><span>سير العمليات</span></div>
+      <div class="nav-section">التحليل</div>
+      <div class="nav-item" data-page="monte" onclick="navigate('monte')"><span class="nav-icon">📈</span><span>مونت كارلو</span></div>
+      <div class="nav-item" data-page="sensitivity" onclick="navigate('sensitivity')"><span class="nav-icon">🌪</span><span>تحليل الحساسية</span></div>
+      <div class="nav-section">التقارير</div>
+      <div class="nav-item" data-page="export" onclick="navigate('export')"><span class="nav-icon">📥</span><span>مركز التصدير</span></div>
+      <div id="admin-nav" style="display:none">
+        <div class="nav-section">الإدارة</div>
+        <div class="nav-item" data-page="admin" onclick="navigate('admin')"><span class="nav-icon">⚙️</span><span>لوحة الإدارة</span></div>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar" id="user-avatar">م</div>
+        <div class="user-info">
+          <div class="user-name" id="user-name-display">—</div>
+          <div class="user-role" id="user-role-display">—</div>
+        </div>
+        <button class="logout-btn" onclick="doLogout()">خروج</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div id="main">
+    <div class="topbar">
+      <div class="topbar-title" id="page-title">لوحة القيادة</div>
+      <div class="topbar-actions" id="topbar-actions"></div>
+    </div>
+    <div class="page-content" id="page-content">
+      <div class="empty-state"><div class="icon">📂</div><p>اختر مشروعاً من القائمة الجانبية للبدء</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- Risk Modal -->
+<div class="modal-overlay" id="risk-modal">
+  <div class="modal" style="width:820px">
+    <div class="modal-header">
+      <div class="modal-title" id="risk-modal-title">إضافة مخاطرة جديدة</div>
+      <button class="modal-close" onclick="closeRiskModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="rm-id">
+      <div class="form-row">
+        <div class="form-group"><label>الفئة *</label><select id="rm-category" onchange="populateSubcats()"><option value="">اختر الفئة...</option></select></div>
+        <div class="form-group"><label>الفئة الفرعية</label><select id="rm-subcategory"><option value="">اختر...</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>نوع المخاطرة</label><select id="rm-type"><option value="threat">تهديد</option><option value="opportunity">فرصة</option></select></div>
+        <div class="form-group"><label>استراتيجية الاستجابة</label>
+          <select id="rm-strategy">
+            <option value="avoid">تجنب</option><option value="mitigate">تخفيف</option>
+            <option value="transfer">نقل</option><option value="accept_active">قبول نشط</option>
+            <option value="accept_passive">قبول سلبي</option><option value="exploit">استغلال</option>
+            <option value="enhance">تعزيز</option><option value="share">مشاركة</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label>السبب (Cause)</label><textarea id="rm-cause" rows="2"></textarea></div>
+      <div class="form-group"><label>الحدث المحتمل (Event)</label><textarea id="rm-event" rows="2"></textarea></div>
+      <div class="form-group"><label>وصف التأثير (Impact)</label><textarea id="rm-impact" rows="2"></textarea></div>
+      <div class="form-group"><label>المحفز (Trigger)</label><input type="text" id="rm-trigger"></div>
+      <div class="form-row">
+        <div class="form-group"><label>مالك المخاطرة</label><input type="text" id="rm-owner"></div>
+        <div class="form-group"><label>مسؤول الإجراء</label><input type="text" id="rm-action-owner"></div>
+      </div>
+      <div class="form-group"><label>خطة الاستجابة</label><textarea id="rm-response" rows="2"></textarea></div>
+      <div class="form-group"><label>خطة الطوارئ</label><textarea id="rm-contingency" rows="2"></textarea></div>
+      <fieldset style="border:1.5px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px">
+        <legend style="font-size:12px;font-weight:700;color:var(--text-muted);padding:0 6px">التقييم (1=منخفض جداً ← 5=عالٍ جداً)</legend>
+        <div class="form-row">
+          <div class="form-group"><label>الاحتمالية</label><select id="rm-prob">
+            <option value="1">1 — منخفضة جداً (≤10%)</option><option value="2">2 — منخفضة (11-30%)</option>
+            <option value="3">3 — متوسطة (31-60%)</option><option value="4">4 — عالية (61-90%)</option>
+            <option value="5">5 — عالية جداً (&gt;90%)</option>
+          </select></div>
+          <div class="form-group"><label>تأثير التكلفة</label><select id="rm-cost-i"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>تأثير الوقت</label><select id="rm-time-i"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div>
+          <div class="form-group"><label>تأثير النطاق</label><select id="rm-scope-i"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>تأثير الجودة</label><select id="rm-quality-i"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div>
+          <div class="form-group"><label>تأثير السمعة</label><select id="rm-rep-i"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div>
+        </div>
+        <div class="form-group" style="max-width:48%"><label>تأثير أصحاب المصلحة</label><select id="rm-stake-i"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div>
+      </fieldset>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="saveRisk()">💾 حفظ المخاطرة</button>
+      <button class="btn btn-outline" onclick="closeRiskModal()">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- Project Modal -->
+<div class="modal-overlay" id="project-modal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">🏗 مشروع جديد</div><button class="modal-close" onclick="document.getElementById('project-modal').classList.remove('open')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>اسم المشروع *</label><input id="pj-name" type="text"></div>
+      <div class="form-row">
+        <div class="form-group"><label>نوع المشروع</label><select id="pj-type">
+          <option>إنشاءات وبنية تحتية</option><option>تقنية معلومات</option><option>خدمات استشارية</option>
+          <option>صناعة وتصنيع</option><option>طاقة ومرافق</option><option>أخرى</option>
+        </select></div>
+        <div class="form-group"><label>قيمة العقد</label><input id="pj-value" type="number" dir="ltr"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>العملة</label><select id="pj-currency"><option value="SAR">ريال سعودي</option><option value="USD">دولار</option><option value="AED">درهم</option><option value="EGP">جنيه مصري</option></select></div>
+        <div class="form-group"><label>مدة المشروع (شهر)</label><input id="pj-duration" type="number" dir="ltr"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>تاريخ البداية</label><input id="pj-start" type="date" dir="ltr"></div>
+        <div class="form-group"><label>تاريخ الانتهاء</label><input id="pj-end" type="date" dir="ltr"></div>
+      </div>
+      <div class="form-group"><label>ملخص النطاق</label><textarea id="pj-scope" rows="3"></textarea></div>
+      <div class="form-group"><label>المخرجات الرئيسية</label><textarea id="pj-deliverables" rows="2"></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label>شهية المخاطر</label><select id="pj-appetite"><option value="low">منخفضة</option><option value="moderate" selected>معتدلة</option><option value="high">عالية</option></select></div>
+        <div class="form-group"><label>احتياطي الطوارئ %</label><input id="pj-contingency" type="number" value="10" dir="ltr"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="saveProject()">💾 إنشاء المشروع</button>
+      <button class="btn btn-outline" onclick="document.getElementById('project-modal').classList.remove('open')">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="toast"></div>
+
+<!-- API + App Script -->
+<script>
+// ── Config ─────────────────────────────────────────────────
+const API_BASE = window.RISK_API_BASE || "http://localhost:8000";
+
+// ── Minimal API client (inlined, no external file dependency) ──
+class API {
+  constructor(base) {
+    this.base = base.replace(/\/$/, "");
+    this.token = localStorage.getItem("riskpro_token") || null;
+  }
+  _headers() {
+    const h = { "Content-Type": "application/json" };
+    if (this.token) h["Authorization"] = `Bearer ${this.token}`;
+    return h;
+  }
+  async _req(method, path, body = null) {
+    const opts = { method, headers: this._headers() };
+    if (body !== null) opts.body = JSON.stringify(body);
+    const r = await fetch(this.base + path, opts);
+    if (!r.ok) {
+      let msg = `HTTP ${r.status}`;
+      try { const e = await r.json(); msg = e.detail || msg; } catch(_) {}
+      throw new Error(msg);
+    }
+    const ct = r.headers.get("content-type") || "";
+    if (ct.includes("json")) return r.json();
+    if (ct.includes("sheet") || ct.includes("word") || ct.includes("octet")) return r.blob();
+    return r.text();
+  }
+  get(p) { return this._req("GET", p); }
+  post(p, b) { return this._req("POST", p, b); }
+  put(p, b) { return this._req("PUT", p, b); }
+  del(p) { return this._req("DELETE", p); }
+  async upload(path, file) {
+    const fd = new FormData(); fd.append("file", file);
+    const r = await fetch(this.base + path, {
+      method: "POST", headers: { Authorization: `Bearer ${this.token}` }, body: fd,
+    });
+    if (!r.ok) { const e = await r.json(); throw new Error(e.detail || "Upload failed"); }
+    return r.json();
+  }
+  async formPost(path, pairs) {
+    const fd = new FormData();
+    pairs.forEach(([k, v]) => { if (v != null) fd.append(k, String(v)); });
+    const r = await fetch(this.base + path, {
+      method: "POST", headers: { Authorization: `Bearer ${this.token}` }, body: fd,
+    });
+    if (!r.ok) { const e = await r.json(); throw new Error(e.detail || "Request failed"); }
+    return r.json();
+  }
+  download(blob, name) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = name;
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
+  }
+  login(email, pw) { return this.post("/api/auth/login", { email, password: pw }); }
+  register(full_name, email, password, mobile, company, country) {
+    return this.post("/api/auth/register", { full_name, email, password, mobile, company, country });
+  }
+}
+
+const api = new API(API_BASE);
+
+// ── State ─────────────────────────────────────────────────
+let state = {
+  currentPage: "dashboard",
+  projects: [],
+  currentProjectId: null,
+  currentProject: null,
+  risks: [],
+  tracking: [],
+  dashboard: null,
+  riskCategories: [],
+  riskSubcategories: {},
+  editingRiskId: null,
+  plans: [],
+  monteResult: null,
+};
+
+// ── Toast ─────────────────────────────────────────────────
+function toast(msg, type = "info") {
+  const el = document.createElement("div");
+  el.className = `toast-item toast-${type}`;
+  el.textContent = msg;
+  document.getElementById("toast").appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+// ── Auth ─────────────────────────────────────────────────
+function getUser() {
+  try { return JSON.parse(localStorage.getItem("riskpro_user") || "null"); } catch { return null; }
+}
+
+async function doLogin() {
+  const email = document.getElementById("login-email").value.trim();
+  const pw = document.getElementById("login-password").value;
+  if (!email || !pw) return toast("أدخل البريد وكلمة المرور", "error");
+  try {
+    const data = await api.login(email, pw);
+    api.token = data.access_token;
+    localStorage.setItem("riskpro_token", data.access_token);
+    localStorage.setItem("riskpro_user", JSON.stringify({ id: data.user_id, role: data.role, status: data.status, full_name: data.full_name }));
+    toast("تم تسجيل الدخول بنجاح ✓", "success");
+    await bootApp();
+  } catch (e) { toast(e.message, "error"); }
+}
+
+async function doRegister() {
+  const name = document.getElementById("reg-name").value.trim();
+  const email = document.getElementById("reg-email").value.trim();
+  const pw = document.getElementById("reg-pass").value;
+  const mobile = document.getElementById("reg-mobile").value.trim();
+  const company = document.getElementById("reg-company").value.trim();
+  const country = document.getElementById("reg-country").value.trim();
+  if (!name || !email || !pw) return toast("الاسم والبريد وكلمة المرور مطلوبة", "error");
+  try {
+    await api.register(name, email, pw, mobile, company, country);
+    toast("تم إنشاء الحساب — سجّل الدخول الآن", "success");
+    switchAuthTab("login");
+  } catch (e) { toast(e.message, "error"); }
+}
+
+function doLogout() {
+  api.token = null;
+  localStorage.clear();
+  location.reload();
+}
+
+async function doVerifyCode() {
+  const code = document.getElementById("activation-code").value.trim();
+  if (!code) return toast("أدخل كود التفعيل", "error");
+  try {
+    await api.post("/api/activation/verify", { code });
+    toast("تم تفعيل الحساب بنجاح 🎉", "success");
+    const me = await api.get("/api/auth/me");
+    localStorage.setItem("riskpro_user", JSON.stringify({ ...getUser(), status: me.status }));
+    await bootApp();
+  } catch (e) { toast(e.message, "error"); }
+}
+
+function switchAuthTab(tab) {
+  document.getElementById("login-form").style.display = tab === "login" ? "block" : "none";
+  document.getElementById("register-form").style.display = tab === "register" ? "block" : "none";
+  document.getElementById("tab-login").classList.toggle("active", tab === "login");
+  document.getElementById("tab-register").classList.toggle("active", tab === "register");
+}
+
+// ── App Boot ─────────────────────────────────────────────
+async function bootApp() {
+  hide("loading-screen");
+  const user = getUser();
+  if (!user) { showAuth(); return; }
+  const isActivated = user.status === "activated" || user.role === "admin";
+  if (!isActivated) { showActivation(user); return; }
+  // Show app
+  document.getElementById("user-name-display").textContent = user.full_name || "مستخدم";
+  document.getElementById("user-role-display").textContent = user.role === "admin" ? "مشرف النظام" : "مستخدم";
+  document.getElementById("user-avatar").textContent = (user.full_name || "م")[0];
+  if (user.role === "admin") document.getElementById("admin-nav").style.display = "block";
+  show("app");
+  // Load projects and categories
+  await Promise.all([loadProjects(), loadCategories()]);
+  navigate("dashboard");
+}
+
+function showAuth() {
+  hide("loading-screen"); hide("app"); hide("activation-screen");
+  document.getElementById("auth-screen").style.display = "flex";
+}
+function showActivation(user) {
+  hide("loading-screen"); hide("app");
+  document.getElementById("auth-screen").style.display = "none";
+  document.getElementById("activation-screen").style.display = "flex";
+}
+function show(id) { const el = document.getElementById(id); if (el) el.style.display = "block"; }
+function hide(id) { const el = document.getElementById(id); if (el) el.style.display = "none"; }
+
+// ── Projects ─────────────────────────────────────────────
+async function loadProjects() {
+  try {
+    state.projects = await api.get("/api/projects");
+    const sel = document.getElementById("project-select");
+    sel.innerHTML = '<option value="">اختر مشروعاً...</option>';
+    state.projects.forEach(p => {
+      const opt = document.createElement("option");
+      opt.value = p.id; opt.textContent = p.name.slice(0, 35);
+      sel.appendChild(opt);
+    });
+    if (state.projects.length === 1 && !state.currentProjectId) {
+      sel.value = state.projects[0].id;
+      onProjectChange(state.projects[0].id);
+    }
+  } catch (e) { toast("فشل تحميل المشاريع: " + e.message, "error"); }
+}
+
+async function onProjectChange(id) {
+  if (!id) { state.currentProjectId = null; state.currentProject = null; return; }
+  state.currentProjectId = parseInt(id);
+  state.currentProject = state.projects.find(p => p.id === state.currentProjectId);
+  // Reload current page data
+  await loadPageData(state.currentPage);
+}
+
+async function loadCategories() {
+  try {
+    const data = await api.get("/api/risk-categories");
+    state.riskCategories = data.categories || [];
+    state.riskSubcategories = data.subcategories || {};
+  } catch (_) {}
+}
+
+// ── Navigation ────────────────────────────────────────────
+async function navigate(page) {
+  state.currentPage = page;
+  document.querySelectorAll(".nav-item").forEach(n => n.classList.toggle("active", n.dataset.page === page));
+  const titles = {
+    dashboard: "لوحة القيادة", register: "سجل المخاطر",
+    tracking: "متابعة الاستجابة", plan: "خطة إدارة المخاطر",
+    raci: "مصفوفة RACI", process: "سير العمليات",
+    monte: "محاكاة مونت كارلو", sensitivity: "تحليل الحساسية",
+    export: "مركز التصدير", admin: "لوحة الإدارة",
+  };
+  document.getElementById("page-title").textContent = titles[page] || page;
+  await loadPageData(page);
+}
+
+async function loadPageData(page) {
+  const pid = state.currentProjectId;
+  const content = document.getElementById("page-content");
+  content.innerHTML = `<div class="empty-state"><div class="spinner"></div><p>جارٍ التحميل...</p></div>`;
+  try {
+    switch (page) {
+      case "dashboard":  await renderDashboard(); break;
+      case "register":   await renderRegister(); break;
+      case "tracking":   await renderTracking(); break;
+      case "plan":       await renderPlan(); break;
+      case "raci":       await renderRaci(); break;
+      case "process":    await renderProcess(); break;
+      case "monte":      await renderMonte(); break;
+      case "sensitivity": await renderSensitivity(); break;
+      case "export":     renderExport(); break;
+      case "admin":      await renderAdmin(); break;
+      default:           content.innerHTML = `<div class="empty-state"><div class="icon">🚧</div><p>قيد التطوير</p></div>`;
+    }
+  } catch (e) {
+    content.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>${e.message}</p></div>`;
+  }
+}
+
+function requireProject() {
+  if (!state.currentProjectId) throw new Error("الرجاء اختيار مشروع من القائمة الجانبية أولاً");
+}
+
+// ── Dashboard ─────────────────────────────────────────────
+async function renderDashboard() {
+  requireProject();
+  const d = await api.get(`/api/projects/${state.currentProjectId}/dashboard`);
+  state.dashboard = d;
+  const p = state.currentProject;
+  document.getElementById("topbar-actions").innerHTML =
+    `<button class="btn btn-primary btn-sm" onclick="document.getElementById('project-modal').classList.add('open')">+ مشروع جديد</button>`;
+
+  const heatData = buildHeatmap(state.risks.length ? state.risks : await loadRisksData());
+  document.getElementById("page-content").innerHTML = `
+    <div class="kpi-grid">
+      <div class="kpi-card danger"><div class="kpi-label">مخاطر عالية وحرجة</div><div class="kpi-value">${d.high_risks}</div><div class="kpi-sub">من أصل ${d.total_risks} إجمالاً</div></div>
+      <div class="kpi-card warning"><div class="kpi-label">مخاطر متوسطة</div><div class="kpi-value">${d.medium_risks}</div></div>
+      <div class="kpi-card success"><div class="kpi-label">فرص محتملة</div><div class="kpi-value">${d.opportunities}</div></div>
+      <div class="kpi-card info"><div class="kpi-label">متوسط تقدم الاستجابة</div><div class="kpi-value">${d.avg_response_progress}%</div></div>
+      <div class="kpi-card danger"><div class="kpi-label">تصعيد مطلوب</div><div class="kpi-value">${d.escalated_count}</div></div>
+      <div class="kpi-card success"><div class="kpi-label">مخاطر مغلقة</div><div class="kpi-value">${d.closed_risks}</div><div class="kpi-sub">من أصل ${d.open_risks} مفتوحة</div></div>
+    </div>
+    <div class="grid-2 mb-24">
+      <div class="card"><div class="card-title">🟥 مصفوفة الاحتمالية × التأثير</div>${heatData}</div>
+      <div class="card"><div class="card-title">📊 توزيع المخاطر بالفئة</div><div class="chart-wrapper"><canvas id="cat-chart"></canvas></div></div>
+    </div>
+    <div class="card mb-24">
+      <div class="card-title">🔴 أعلى 10 مخاطر أولوية</div>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>رقم</th><th>الفئة</th><th>السبب</th><th>الدرجة</th><th>الأولوية</th><th>المالك</th></tr></thead>
+          <tbody>${d.top_critical.map(r => `
+            <tr>
+              <td><strong>${r.risk_id}</strong></td>
+              <td><span class="tag">${r.category}</span></td>
+              <td>${(r.cause || "—").slice(0, 50)}</td>
+              <td><strong class="${scoreColor(r.score)}">${r.score}</strong></td>
+              <td>${priorityBadge(r.priority)}</td>
+              <td>${r.risk_owner || "—"}</td>
+            </tr>`).join("")}</tbody>
+        </table>
+      </div>
+    </div>
+  `;
+  // Chart.js — categories
+  const catLabels = Object.keys(d.by_category);
+  const catData = catLabels.map(k => d.by_category[k]);
+  const catColors = catLabels.map((_, i) => `hsl(${200 + i * 25},55%,50%)`);
+  const ctx = document.getElementById("cat-chart");
+  if (ctx) new Chart(ctx, { type: "doughnut", data: { labels: catLabels, datasets: [{ data: catData, backgroundColor: catColors, borderWidth: 2 }] }, options: { plugins: { legend: { position: "right" } }, maintainAspectRatio: false } });
+}
+
+function buildHeatmap(risks) {
+  const matrix = {};
+  risks.forEach(r => {
+    const p = r.probability; const i = Math.round(r.composite_impact || r.cost_impact || 1);
+    const key = `${p}-${i}`; matrix[key] = (matrix[key] || 0) + 1;
+  });
+  const probLabels = ["5 عالية جداً", "4 عالية", "3 متوسطة", "2 منخفضة", "1 منخفضة جداً"];
+  let html = `<div class="heatmap-grid" style="margin-top:8px">`;
+  html += `<div class="heatmap-axis" style="font-size:9px">احتمالية ↕</div>`;
+  [1,2,3,4,5].forEach(i => html += `<div class="heatmap-axis" style="font-size:9px">ت${i}</div>`);
+  [5,4,3,2,1].forEach(prob => {
+    html += `<div class="heatmap-axis" style="font-size:9px">${prob}</div>`;
+    [1,2,3,4,5].forEach(impact => {
+      const score = prob * impact; const cnt = matrix[`${prob}-${impact}`] || 0;
+      const cls = score >= 15 ? "heat-12" : score >= 9 ? "heat-9" : score >= 6 ? "heat-6" : score >= 4 ? "heat-4" : score >= 2 ? "heat-2" : "heat-1";
+      html += `<div class="heatmap-cell ${cls}" title="احتمالية=${prob} تأثير=${impact} درجة=${score}">${cnt > 0 ? cnt : ""}</div>`;
+    });
+  });
+  html += `</div>`;
+  return html;
+}
+
+// ── Risk Register ─────────────────────────────────────────
+async function loadRisksData() {
+  state.risks = await api.get(`/api/projects/${state.currentProjectId}/risks`);
+  return state.risks;
+}
+
+async function renderRegister() {
+  requireProject();
+  await loadRisksData();
+  document.getElementById("topbar-actions").innerHTML =
+    `<button class="btn btn-primary btn-sm" onclick="openRiskModal()">+ إضافة مخاطرة</button>
+     <button class="btn btn-outline btn-sm" onclick="doSuggestRisks()">🤖 اقتراح AI</button>`;
+  renderRisksTable();
+}
+
+function renderRisksTable() {
+  const rows = state.risks.map(r => `
+    <tr>
+      <td><strong>${r.risk_id}</strong></td>
+      <td>${r.category.replace("مخاطر ", "")}</td>
+      <td>${r.risk_type === "opportunity" ? "🟢 فرصة" : "🔴 تهديد"}</td>
+      <td>${(r.cause || "—").slice(0, 40)}</td>
+      <td><b>${r.probability}</b></td>
+      <td><b>${r.composite_impact?.toFixed(1) || "—"}</b></td>
+      <td><strong class="${scoreColor(r.score)}">${r.score}</strong></td>
+      <td>${priorityBadge(r.priority)}</td>
+      <td>${r.response_strategy ? strategyLabel(r.response_strategy) : "—"}</td>
+      <td>${r.risk_owner || "—"}</td>
+      <td>${lifecycleBadge(r.lifecycle_status)}</td>
+      <td>
+        <button class="btn btn-outline btn-sm" onclick="openRiskModal(${r.id})">✎</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteRisk(${r.id})">✕</button>
+      </td>
+    </tr>`).join("") || `<tr><td colspan="12" style="text-align:center;color:var(--text-muted);padding:32px">لا توجد مخاطر مسجلة — أضف مخاطرة جديدة</td></tr>`;
+
+  document.getElementById("page-content").innerHTML = `
+    <div class="card">
+      <div class="card-title">📋 سجل المخاطر (${state.risks.length} مخاطرة)</div>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>رقم</th><th>الفئة</th><th>النوع</th><th>السبب</th><th>ح</th><th>ت</th><th>الدرجة</th><th>الأولوية</th><th>الاستجابة</th><th>المالك</th><th>الحالة</th><th>إجراء</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+async function doSuggestRisks() {
+  try {
+    toast("🤖 يجري AI تحليل المشروع وتوليد المخاطر...", "info");
+    const data = await api.post(`/api/projects/${state.currentProjectId}/suggest-risks`, {});
+    const suggestions = data.suggestions || [];
+    if (!suggestions.length) return toast("لم يتم اقتراح مخاطر", "info");
+    // Auto-create all suggestions
+    let created = 0;
+    for (const s of suggestions) {
+      try {
+        await api.post(`/api/projects/${state.currentProjectId}/risks`, {
+          project_id: state.currentProjectId, ...s,
+          probability: s.probability || 2, cost_impact: s.cost_impact || 2,
+          time_impact: s.time_impact || 2, scope_impact: s.scope_impact || 1,
+          quality_impact: s.quality_impact || 1, reputation_impact: s.reputation_impact || 1,
+          stakeholder_impact: s.stakeholder_impact || 1,
+        });
+        created++;
+      } catch (_) {}
+    }
+    toast(`تم إنشاء ${created} مخاطرة من اقتراحات AI 🎉`, "success");
+    await loadRisksData(); renderRisksTable();
+  } catch (e) { toast(e.message, "error"); }
+}
+
+function openRiskModal(riskId = null) {
+  state.editingRiskId = riskId;
+  document.getElementById("risk-modal-title").textContent = riskId ? "تعديل المخاطرة" : "إضافة مخاطرة جديدة";
+  // Populate categories
+  const catSel = document.getElementById("rm-category");
+  catSel.innerHTML = '<option value="">اختر الفئة...</option>';
+  state.riskCategories.forEach(c => {
+    const o = document.createElement("option"); o.value = c; o.textContent = c; catSel.appendChild(o);
+  });
+  if (riskId) {
+    const r = state.risks.find(x => x.id === riskId);
+    if (r) {
+      catSel.value = r.category; populateSubcats();
+      setTimeout(() => { document.getElementById("rm-subcategory").value = r.subcategory || ""; }, 50);
+      document.getElementById("rm-type").value = r.risk_type;
+      document.getElementById("rm-strategy").value = r.response_strategy || "mitigate";
+      document.getElementById("rm-cause").value = r.cause || "";
+      document.getElementById("rm-event").value = r.event || "";
+      document.getElementById("rm-impact").value = r.impact_description || "";
+      document.getElementById("rm-trigger").value = r.trigger || "";
+      document.getElementById("rm-owner").value = r.risk_owner || "";
+      document.getElementById("rm-action-owner").value = r.action_owner || "";
+      document.getElementById("rm-response").value = r.response_plan || "";
+      document.getElementById("rm-contingency").value = r.contingency_plan || "";
+      ["prob","cost-i","time-i","scope-i","quality-i","rep-i","stake-i"].forEach(id => {
+        const field = id === "prob" ? "probability" : id.replace("-i", "_impact").replace("prob", "probability")
+          .replace("cost-i", "cost_impact").replace("time-i", "time_impact")
+          .replace("scope-i", "scope_impact").replace("quality-i", "quality_impact")
+          .replace("rep-i", "reputation_impact").replace("stake-i", "stakeholder_impact");
+        const el = document.getElementById(`rm-${id}`);
+        if (el && r[field]) el.value = r[field];
+      });
+    }
+  } else {
+    document.getElementById("risk-modal").querySelectorAll("input,select,textarea").forEach(el => { if (el.id !== "rm-id") el.value = el.type === "number" ? "1" : ""; });
+    document.getElementById("rm-prob").value = "3";
+    ["rm-cost-i","rm-time-i","rm-scope-i","rm-quality-i","rm-rep-i","rm-stake-i"].forEach(id => { const el = document.getElementById(id); if (el) el.value = "2"; });
+  }
+  document.getElementById("risk-modal").classList.add("open");
+}
+
+function populateSubcats() {
+  const cat = document.getElementById("rm-category").value;
+  const sub = document.getElementById("rm-subcategory");
+  sub.innerHTML = '<option value="">اختر...</option>';
+  (state.riskSubcategories[cat] || []).forEach(s => {
+    const o = document.createElement("option"); o.value = s; o.textContent = s; sub.appendChild(o);
+  });
+}
+
+function closeRiskModal() { document.getElementById("risk-modal").classList.remove("open"); }
+
+async function saveRisk() {
+  const payload = {
+    project_id: state.currentProjectId,
+    category: document.getElementById("rm-category").value,
+    subcategory: document.getElementById("rm-subcategory").value || null,
+    risk_type: document.getElementById("rm-type").value,
+    response_strategy: document.getElementById("rm-strategy").value,
+    cause: document.getElementById("rm-cause").value.trim(),
+    event: document.getElementById("rm-event").value.trim(),
+    impact_description: document.getElementById("rm-impact").value.trim(),
+    trigger: document.getElementById("rm-trigger").value.trim(),
+    risk_owner: document.getElementById("rm-owner").value.trim(),
+    action_owner: document.getElementById("rm-action-owner").value.trim(),
+    response_plan: document.getElementById("rm-response").value.trim(),
+    contingency_plan: document.getElementById("rm-contingency").value.trim(),
+    probability: parseInt(document.getElementById("rm-prob").value),
+    cost_impact: parseInt(document.getElementById("rm-cost-i").value),
+    time_impact: parseInt(document.getElementById("rm-time-i").value),
+    scope_impact: parseInt(document.getElementById("rm-scope-i").value),
+    quality_impact: parseInt(document.getElementById("rm-quality-i").value),
+    reputation_impact: parseInt(document.getElementById("rm-rep-i").value),
+    stakeholder_impact: parseInt(document.getElementById("rm-stake-i").value),
+  };
+  if (!payload.category) return toast("اختر فئة المخاطرة", "error");
+  try {
+    if (state.editingRiskId) {
+      await api.put(`/api/projects/${state.currentProjectId}/risks/${state.editingRiskId}`, payload);
+      toast("تم تحديث المخاطرة ✓", "success");
+    } else {
+      await api.post(`/api/projects/${state.currentProjectId}/risks`, payload);
+      toast("تمت إضافة المخاطرة ✓", "success");
+    }
+    closeRiskModal();
+    await loadRisksData(); renderRisksTable();
+  } catch (e) { toast(e.message, "error"); }
+}
+
+async function deleteRisk(id) {
+  if (!confirm("هل تريد إلغاء هذه المخاطرة؟")) return;
+  try {
+    await api.del(`/api/projects/${state.currentProjectId}/risks/${id}`);
+    toast("تم إلغاء المخاطرة", "info");
+    await loadRisksData(); renderRisksTable();
+  } catch (e) { toast(e.message, "error"); }
+}
+
+// ── Tracking ─────────────────────────────────────────────
+async function renderTracking() {
+  requireProject();
+  state.tracking = await api.get(`/api/projects/${state.currentProjectId}/tracking`);
+  if (!state.risks.length) await loadRisksData();
+  document.getElementById("topbar-actions").innerHTML = "";
+  const rows = state.tracking.map(t => {
+    const risk = state.risks.find(r => r.id === t.risk_id);
+    const fillCls = t.progress_pct >= 80 ? "fill-success" : t.progress_pct >= 40 ? "fill-warning" : "fill-danger";
+    return `<tr>
+      <td><strong>${risk?.risk_id || t.risk_id}</strong></td>
+      <td>${(t.response_action || "").slice(0, 50)}</td>
+      <td>${t.action_owner || "—"}</td>
+      <td>${t.planned_finish || "—"}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="progress-bar" style="flex:1"><div class="progress-fill ${fillCls}" style="width:${t.progress_pct}%"></div></div>
+          <span style="font-size:12px;font-weight:700;color:var(--text-muted)">${t.progress_pct}%</span>
+        </div>
+      </td>
+      <td>${statusBadge(t.current_status)}</td>
+      <td>${t.escalation_required ? '<span class="badge badge-danger">⚠ تصعيد</span>' : '<span class="badge badge-neutral">لا</span>'}</td>
+      <td>${effectivenessLabel(t.effectiveness_rating)}</td>
+      <td><button class="btn btn-outline btn-sm" onclick="openTrackingEdit(${t.id})">✎</button></td>
+    </tr>`;
+  }).join("") || `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-muted)">لا توجد سجلات متابعة</td></tr>`;
+
+  document.getElementById("page-content").innerHTML = `
+    <div class="card">
+      <div class="card-title">🎯 متابعة الاستجابة للمخاطر (${state.tracking.length})</div>
+      <div class="table-wrapper"><table>
+        <thead><tr><th>المخاطرة</th><th>إجراء الاستجابة</th><th>المسؤول</th><th>الموعد</th><th>التقدم</th><th>الحالة</th><th>تصعيد</th><th>الفعالية</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+    </div>`;
+}
+
+function openTrackingEdit(id) {
+  const t = state.tracking.find(x => x.id === id);
+  if (!t) return;
+  const newPct = prompt("التقدم الجديد (0-100):", t.progress_pct);
+  if (newPct === null) return;
+  const newStatus = prompt("الحالة (not_started/in_progress/completed/delayed/cancelled):", t.current_status);
+  if (newStatus === null) return;
+  api.put(`/api/projects/${state.currentProjectId}/tracking/${id}`, {
+    progress_pct: parseInt(newPct) || 0,
+    current_status: newStatus,
+  }).then(() => { toast("تم التحديث ✓", "success"); renderTracking(); }).catch(e => toast(e.message, "error"));
+}
+
+// ── Risk Plan ─────────────────────────────────────────────
+async function renderPlan() {
+  requireProject();
+  const data = await api.get(`/api/projects/${state.currentProjectId}/risk-plan`);
+  state.plans = data.plans || [];
+  document.getElementById("topbar-actions").innerHTML =
+    state.plans.length === 0
+      ? `<button class="btn btn-primary btn-sm" onclick="createDefaultPlan()">+ إنشاء خطة جديدة</button>`
+      : "";
+
+  if (!state.plans.length) {
+    document.getElementById("page-content").innerHTML = `<div class="empty-state"><div class="icon">📝</div><p>لم يتم إنشاء خطة إدارة المخاطر بعد</p><br><button class="btn btn-primary" onclick="createDefaultPlan()">إنشاء الخطة الآن</button></div>`;
+    return;
+  }
+  const plan = state.plans[0];
+  const steps = [
+    {label: "مسودة", key: "drafted"},
+    {label: "مراجعة الاستشاري", key: "under_consultant_review"},
+    {label: "موافقة الاستشاري", key: "consultant_approved"},
+    {label: "مراجعة المالك", key: "under_owner_review"},
+    {label: "موافقة المالك", key: "owner_approved"},
+    {label: "سارية", key: "effective"},
+  ];
+  const statusOrder = steps.map(s => s.key);
+  const currentIdx = statusOrder.indexOf(plan.workflow_status);
+  const wfDots = steps.map((s, i) => {
+    const cls = i < currentIdx ? "done" : i === currentIdx ? "active" : "";
+    return `<div class="wf-step ${cls}"><div class="wf-dot">${i < currentIdx ? "✓" : i + 1}</div><div class="wf-label">${s.label}</div></div>`;
+  }).join("");
+
+  const nextActions = {
+    "drafted": { label: "إرسال للاستشاري ◀", action: "submit_consultant" },
+    "under_consultant_review": { label: "موافقة الاستشاري ✓", action: "approve_consultant" },
+    "consultant_approved": { label: "إرسال للمالك ◀", action: "submit_owner" },
+    "under_owner_review": { label: "موافقة المالك ✓", action: "approve_owner" },
+    "owner_approved": { label: "تفعيل الخطة 🚀", action: "make_effective" },
+  };
+  const next = nextActions[plan.workflow_status];
+
+  document.getElementById("page-content").innerHTML = `
+    <div class="card mb-24">
+      <div class="card-title">📝 ${plan.title}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <div><span class="tag">الإصدار ${plan.version}</span> &nbsp; <span class="tag">احتياطي طارئ ${plan.contingency_reserve_pct}%</span> &nbsp; <span class="tag">احتياطي إداري ${plan.management_reserve_pct}%</span></div>
+        ${next ? `<button class="btn btn-primary btn-sm" onclick="advanceWorkflow('${plan.id}', '${next.action}')">${next.label}</button>` : '<span class="badge badge-success">✓ الخطة سارية</span>'}
+      </div>
+      <div class="workflow-steps">${wfDots}</div>
+    </div>
+    <div class="grid-2">
+      <div class="card"><div class="card-title">🎯 الغرض والأهداف</div><p style="font-size:14px;line-height:2;color:var(--text-muted)">${plan.risk_appetite || "غير محدد"}</p></div>
+      <div class="card"><div class="card-title">📅 دورة المراجعة والإبلاغ</div>
+        <p style="font-size:14px;line-height:2;color:var(--text-muted)">
+          موافقة الاستشاري: ${plan.consultant_approved_at ? new Date(plan.consultant_approved_at).toLocaleDateString("ar") : "لم تتم"}<br>
+          موافقة المالك: ${plan.owner_approved_at ? new Date(plan.owner_approved_at).toLocaleDateString("ar") : "لم تتم"}
+        </p>
+      </div>
+    </div>`;
+}
+
+async function createDefaultPlan() {
+  try {
+    await api.post(`/api/projects/${state.currentProjectId}/risk-plan`, {
+      project_id: state.currentProjectId,
+      title: `خطة إدارة المخاطر — ${state.currentProject?.name || "المشروع"}`,
+      version: "1.0",
+      purpose: "تحديد الإطار المنهجي لإدارة مخاطر المشروع وفق معايير PMI وPMBOK الإصدار الثامن",
+      risk_appetite: "معتدلة — الشركة مستعدة لقبول مخاطر يصل تأثيرها إلى 5% من قيمة العقد",
+      contingency_reserve_pct: 10.0, management_reserve_pct: 5.0,
+    });
+    toast("تم إنشاء خطة إدارة المخاطر ✓", "success");
+    await renderPlan();
+  } catch (e) { toast(e.message, "error"); }
+}
+
+async function advanceWorkflow(planId, action) {
+  try {
+    const data = await api.post(`/api/projects/${state.currentProjectId}/risk-plan/${planId}/advance-workflow?action=${action}`, {});
+    toast(data.message, "success");
+    await renderPlan();
+  } catch (e) { toast(e.message, "error"); }
+}
+
+// ── RACI ─────────────────────────────────────────────────
+async function renderRaci() {
+  requireProject();
+  const data = await api.get(`/api/projects/${state.currentProjectId}/raci`);
+  const rows = (data.raci || []).map(row => {
+    const cells = [row.project_manager, row.contractor_team, row.risk_manager, row.consultant, row.owner_rep, row.portfolio_mgmt]
+      .map(v => `<td style="text-align:center"><span class="badge ${raciColor(v)}">${v || ""}</span></td>`).join("");
+    return `<tr><td><strong>${row.activity_ar || row.activity}</strong></td>${cells}</tr>`;
+  }).join("");
+
+  document.getElementById("page-content").innerHTML = `
+    <div class="card">
+      <div class="card-title">👥 مصفوفة المسؤوليات RACI</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">R=مسؤول | A=محاسَب | C=يُستشار | I=يُبلَّغ</div>
+      <div class="table-wrapper"><table>
+        <thead><tr><th>النشاط</th><th>مدير المشروع</th><th>فريق المقاول</th><th>مدير المخاطر</th><th>الاستشاري</th><th>ممثل المالك</th><th>إدارة المحفظة</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+    </div>`;
+}
+
+function raciColor(v) {
+  if (v === "R") return "badge-danger";
+  if (v === "A") return "badge-warn";
+  if (v === "C") return "badge-info";
+  if (v === "I") return "badge-neutral";
+  return "";
+}
+
+// ── Business Process ──────────────────────────────────────
+async function renderProcess() {
+  requireProject();
+  const data = await api.get(`/api/projects/${state.currentProjectId}/business-processes`);
+  const partyColors = { contractor: "#1B4F72", consultant: "#27AE60", owner: "#8E44AD" };
+  const partyNames = { contractor: "المقاول", consultant: "الاستشاري", owner: "ممثل المالك" };
+  const html = (data.processes || []).map(proc => {
+    const color = partyColors[proc.party] || "#555";
+    const steps = (proc.steps || []).map((s, i) => `
+      <div style="display:flex;gap:12px;margin-bottom:12px;align-items:flex-start">
+        <div style="width:28px;height:28px;border-radius:50%;background:${color};color:#fff;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${s.step}</div>
+        <div><div style="font-size:14px;font-weight:700;color:var(--text)">${s.action}</div><div style="font-size:12px;color:var(--text-muted)">${s.output}</div></div>
+      </div>`).join("");
+    return `<div class="card" style="border-top:4px solid ${color}">
+      <div class="card-title" style="color:${color}">⚙ ${partyNames[proc.party] || proc.party_ar || proc.party}</div>
+      ${steps}
+    </div>`;
+  }).join("");
+  document.getElementById("page-content").innerHTML = `<div class="grid-3">${html}</div>`;
+}
+
+// ── Monte Carlo ───────────────────────────────────────────
+async function renderMonte() {
+  requireProject();
+  const project = state.currentProject;
+  const baseCost = project?.contract_value || 10000000;
+  document.getElementById("topbar-actions").innerHTML = "";
+  document.getElementById("page-content").innerHTML = `
+    <div class="card mb-24">
+      <div class="card-title">⚙️ إعدادات المحاكاة</div>
+      <div class="form-row" style="max-width:600px">
+        <div class="form-group"><label>قيمة التكلفة الأساسية (${project?.currency || "SAR"})</label>
+          <input id="mc-base" type="number" value="${baseCost}" dir="ltr"></div>
+        <div class="form-group"><label>نسبة عدم اليقين (%)</label>
+          <input id="mc-unc" type="number" value="20" min="1" max="50" dir="ltr"></div>
+      </div>
+      <div class="form-group" style="max-width:280px"><label>عدد التكرارات</label>
+        <select id="mc-iter" dir="ltr"><option value="5000">5,000</option><option value="10000" selected>10,000</option><option value="25000">25,000</option></select>
+      </div>
+      <button class="btn btn-primary" onclick="runMonteCarlo()">▶ تشغيل المحاكاة</button>
+    </div>
+    <div id="mc-results" style="display:none">
+      <div class="grid-3 mb-24">
+        <div class="kpi-card info"><div class="kpi-label">P50 — متوسط التكلفة</div><div class="kpi-value" id="mc-p50">—</div></div>
+        <div class="kpi-card warning"><div class="kpi-label">P80 — تكلفة محافظة</div><div class="kpi-value" id="mc-p80">—</div></div>
+        <div class="kpi-card danger"><div class="kpi-label">P90 — سيناريو أسوأ حال</div><div class="kpi-value" id="mc-p90">—</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📊 توزيع التكاليف المحتملة</div>
+        <div class="chart-wrapper" style="height:280px"><canvas id="mc-chart"></canvas></div>
+      </div>
+    </div>`;
+}
+
+async function runMonteCarlo() {
+  requireProject();
+  const base = parseFloat(document.getElementById("mc-base").value);
+  const unc = parseFloat(document.getElementById("mc-unc").value);
+  const iter = parseInt(document.getElementById("mc-iter").value);
+  if (!base || base <= 0) return toast("أدخل قيمة التكلفة الأساسية", "error");
+  try {
+    toast("⚙️ جارٍ إجراء المحاكاة...", "info");
+    const r = await api.post(`/api/projects/${state.currentProjectId}/analytics/monte-carlo`, {
+      project_id: state.currentProjectId, base_cost: base, cost_uncertainty_pct: unc, iterations: iter,
+    });
+    state.monteResult = r;
+    const fmt = v => (v / 1000000).toFixed(2) + "M";
+    document.getElementById("mc-p50").textContent = fmt(r.p50_cost);
+    document.getElementById("mc-p80").textContent = fmt(r.p80_cost);
+    document.getElementById("mc-p90").textContent = fmt(r.p90_cost);
+    document.getElementById("mc-results").style.display = "block";
+    const ctx = document.getElementById("mc-chart");
+    if (ctx) {
+      new Chart(ctx, {
+        type: "bar",
+        data: { labels: r.histogram_bins.map(b => (b/1000000).toFixed(1)+"M"), datasets: [{ label: "التكرار", data: r.histogram_counts, backgroundColor: "rgba(46,134,171,0.7)", borderColor: "#1B4F72", borderWidth: 1 }] },
+        options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { title: { display: true, text: "التكلفة" } }, y: { title: { display: true, text: "التكرار" } } } },
+      });
+    }
+    toast("✓ اكتملت المحاكاة", "success");
+  } catch (e) { toast(e.message, "error"); }
+}
+
+// ── Sensitivity ───────────────────────────────────────────
+async function renderSensitivity() {
+  requireProject();
+  try {
+    const data = await api.get(`/api/projects/${state.currentProjectId}/analytics/sensitivity`);
+    const drivers = data.drivers || [];
+    if (!drivers.length) {
+      document.getElementById("page-content").innerHTML = `<div class="empty-state"><div class="icon">🌪</div><p>لا توجد بيانات كافية — أضف مخاطر أولاً</p></div>`;
+      return;
+    }
+    const maxRange = Math.max(...drivers.map(d => d.range));
+    const bars = drivers.map((d, i) => `
+      <div style="margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+          <span style="font-weight:600">${i+1}. ${d.name.slice(0, 40)}</span>
+          <span style="color:var(--text-muted)">نطاق: <strong>${d.range.toFixed(1)}%</strong></span>
+        </div>
+        <div style="height:24px;background:#f0f3f7;border-radius:6px;position:relative;overflow:hidden">
+          <div style="position:absolute;right:50%;width:${(d.range/maxRange*50).toFixed(1)}%;height:100%;background:rgba(231,76,60,.7);border-radius:3px 0 0 3px"></div>
+          <div style="position:absolute;left:50%;width:${(d.range/maxRange*50).toFixed(1)}%;height:100%;background:rgba(46,134,171,.7);border-radius:0 3px 3px 0"></div>
+          <div style="position:absolute;left:50%;top:0;bottom:0;width:2px;background:#999;transform:translateX(-50%)"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-top:3px"><span>▼ ${d.low_impact.toFixed(1)}%</span><span>▲ +${d.high_impact.toFixed(1)}%</span></div>
+      </div>`).join("");
+    document.getElementById("page-content").innerHTML = `
+      <div class="card">
+        <div class="card-title">🌪 مخطط تورنادو — أكثر المخاطر تأثيراً على التكلفة الإجمالية</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:20px">يظهر مدى تأثير كل مخاطرة عند زيادة أو نقص الاحتمالية بدرجة واحدة</div>
+        ${bars}
+      </div>`;
+  } catch (e) { document.getElementById("page-content").innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>${e.message}</p></div>`; }
+}
+
+// ── Export ────────────────────────────────────────────────
+function renderExport() {
+  if (!state.currentProjectId) { document.getElementById("page-content").innerHTML = `<div class="empty-state"><div class="icon">📂</div><p>اختر مشروعاً أولاً</p></div>`; return; }
+  const exports = [
+    { icon: "📊", title: "سجل المخاطر — Excel", desc: "جميع المخاطر مع التصنيف والتقييم والاستجابة", btn: "تصدير Excel", fn: "doExportRisks()" },
+    { icon: "🎯", title: "متابعة الاستجابة — Excel", desc: "حالة تنفيذ خطط الاستجابة مع نسب التقدم", btn: "تصدير Excel", fn: "doExportTracking()" },
+    { icon: "📄", title: "خطة إدارة المخاطر — Word", desc: "وثيقة رسمية كاملة بصيغة DOCX جاهزة للطباعة", btn: "تصدير Word", fn: "doExportPlan()" },
+  ];
+  document.getElementById("page-content").innerHTML = `
+    <div class="grid-3">
+      ${exports.map(e => `
+        <div class="card" style="text-align:center">
+          <div style="font-size:40px;margin-bottom:12px">${e.icon}</div>
+          <div style="font-weight:700;font-size:16px;margin-bottom:8px;color:var(--primary-dark)">${e.title}</div>
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:20px;line-height:1.7">${e.desc}</p>
+          <button class="btn btn-primary" onclick="${e.fn}">${e.btn}</button>
+        </div>`).join("")}
+    </div>`;
+}
+
+async function doExportRisks() {
+  try { const blob = await api.get(`/api/projects/${state.currentProjectId}/export/risks`); api.download(blob, `risk_register_${state.currentProjectId}.xlsx`); } catch (e) { toast(e.message, "error"); }
+}
+async function doExportTracking() {
+  try { const blob = await api.get(`/api/projects/${state.currentProjectId}/export/tracking`); api.download(blob, `tracking_${state.currentProjectId}.xlsx`); } catch (e) { toast(e.message, "error"); }
+}
+async function doExportPlan() {
+  if (!state.plans.length) return toast("أنشئ خطة إدارة المخاطر أولاً", "error");
+  try { const blob = await api.get(`/api/projects/${state.currentProjectId}/export/risk-plan/${state.plans[0].id}`); api.download(blob, `risk_plan.docx`); } catch (e) { toast(e.message, "error"); }
+}
+
+// ── Admin ─────────────────────────────────────────────────
+async function renderAdmin() {
+  const user = getUser();
+  if (user?.role !== "admin") { document.getElementById("page-content").innerHTML = `<div class="empty-state"><div class="icon">🚫</div><p>غير مصرح</p></div>`; return; }
+  const stats = await api.get("/api/admin/stats");
+  const usersData = await api.get("/api/admin/users?page=1&page_size=20");
+  const reqData = await api.get("/api/admin/activation-requests");
+  document.getElementById("page-content").innerHTML = `
+    <div class="kpi-grid mb-24">
+      <div class="kpi-card info"><div class="kpi-label">إجمالي المستخدمين</div><div class="kpi-value">${stats.total_users}</div></div>
+      <div class="kpi-card success"><div class="kpi-label">مفعّلون</div><div class="kpi-value">${stats.activated_users}</div></div>
+      <div class="kpi-card warning"><div class="kpi-label">بانتظار الموافقة</div><div class="kpi-value">${stats.pending_users}</div></div>
+      <div class="kpi-card danger"><div class="kpi-label">طلبات تفعيل معلقة</div><div class="kpi-value">${stats.pending_activation_requests}</div></div>
+      <div class="kpi-card info"><div class="kpi-label">المشاريع</div><div class="kpi-value">${stats.total_projects}</div></div>
+      <div class="kpi-card info"><div class="kpi-label">المخاطر المسجلة</div><div class="kpi-value">${stats.total_risks}</div></div>
+    </div>
+    ${reqData.count > 0 ? `
+    <div class="card mb-24">
+      <div class="card-title" style="color:var(--danger)">⚠ طلبات التفعيل المعلقة (${reqData.count})</div>
+      <div class="table-wrapper"><table>
+        <thead><tr><th>المعرف</th><th>معرف المستخدم</th><th>المرجع</th><th>الواتساب</th><th>التاريخ</th><th>إجراء</th></tr></thead>
+        <tbody>${(reqData.requests || []).map(r => `<tr>
+          <td>${r.id}</td><td>${r.user_id}</td>
+          <td>${r.payment_reference || "—"}</td>
+          <td>${r.whatsapp_note || "—"}</td>
+          <td>${new Date(r.created_at).toLocaleDateString("ar")}</td>
+          <td>
+            <button class="btn btn-success btn-sm" onclick="adminApprove(${r.id})">✓ موافقة</button>
+            <button class="btn btn-danger btn-sm" onclick="adminReject(${r.id})">✕ رفض</button>
+          </td>
+        </tr>`).join("")}</tbody>
+      </table></div>
+    </div>` : ""}
+    <div class="card mb-24">
+      <div class="section-header"><div class="card-title">👥 إدارة المستخدمين</div>
+        <button class="btn btn-outline btn-sm" onclick="adminExportMaster()">⬇ تصدير ماستر Excel</button>
+      </div>
+      <div class="table-wrapper"><table>
+        <thead><tr><th>الاسم</th><th>البريد</th><th>الحالة</th><th>الدور</th><th>تاريخ الإنشاء</th><th>انتهاء الاشتراك</th><th>إجراء</th></tr></thead>
+        <tbody>${(usersData.items || []).map(u => `<tr>
+          <td>${u.full_name}</td>
+          <td dir="ltr" style="text-align:right">${u.email}</td>
+          <td>${statusBadgeUser(u.status)}</td>
+          <td>${u.role === "admin" ? '<span class="badge badge-danger">مشرف</span>' : '<span class="badge badge-neutral">مستخدم</span>'}</td>
+          <td>${new Date(u.created_at).toLocaleDateString("ar")}</td>
+          <td>${u.activation_expires_at ? new Date(u.activation_expires_at).toLocaleDateString("ar") : "—"}</td>
+          <td>
+            <button class="btn btn-primary btn-sm" onclick="adminGenCode(${u.id})">🔑 كود</button>
+            <button class="btn btn-danger btn-sm" onclick="adminSuspend(${u.id})">⛔</button>
+          </td>
+        </tr>`).join("")}</tbody>
+      </table></div>
+    </div>`;
+}
+
+async function adminApprove(reqId) {
+  const days = parseInt(prompt("مدة الاشتراك (أيام):", "365")) || 365;
+  try {
+    const data = await api.post("/api/admin/activation-requests/action", { request_id: reqId, action: "approve", duration_days: days });
+    toast(`تمت الموافقة — الكود: ${data.code}`, "success");
+    await renderAdmin();
+  } catch (e) { toast(e.message, "error"); }
+}
+async function adminReject(reqId) {
+  const notes = prompt("سبب الرفض:") || "";
+  try {
+    await api.post("/api/admin/activation-requests/action", { request_id: reqId, action: "reject", admin_notes: notes });
+    toast("تم الرفض", "info");
+    await renderAdmin();
+  } catch (e) { toast(e.message, "error"); }
+}
+async function adminGenCode(userId) {
+  const days = parseInt(prompt("مدة الاشتراك (أيام):", "365")) || 365;
+  try {
+    const data = await api.post(`/api/admin/users/${userId}/generate-code?duration_days=${days}`, {});
+    toast(`الكود: ${data.code}`, "success");
+    prompt("انسخ الكود:", data.code);
+  } catch (e) { toast(e.message, "error"); }
+}
+async function adminSuspend(userId) {
+  if (!confirm("تعليق هذا المستخدم؟")) return;
+  try { await api.put(`/api/admin/users/${userId}`, { status: "suspended" }); toast("تم التعليق", "info"); await renderAdmin(); } catch (e) { toast(e.message, "error"); }
+}
+async function adminExportMaster() {
+  try { const blob = await api.get("/api/admin/export/master"); api.download(blob, "master_export.xlsx"); } catch (e) { toast(e.message, "error"); }
+}
+
+// ── Project creation ──────────────────────────────────────
+async function saveProject() {
+  const payload = {
+    name: document.getElementById("pj-name").value.trim(),
+    project_type: document.getElementById("pj-type").value,
+    contract_value: parseFloat(document.getElementById("pj-value").value) || null,
+    currency: document.getElementById("pj-currency").value,
+    duration_months: parseInt(document.getElementById("pj-duration").value) || null,
+    start_date: document.getElementById("pj-start").value || null,
+    end_date: document.getElementById("pj-end").value || null,
+    scope_summary: document.getElementById("pj-scope").value.trim(),
+    key_deliverables: document.getElementById("pj-deliverables").value.trim(),
+    risk_appetite: document.getElementById("pj-appetite").value,
+    contingency_pct: parseFloat(document.getElementById("pj-contingency").value) || 10,
+  };
+  if (!payload.name) return toast("اسم المشروع مطلوب", "error");
+  try {
+    const proj = await api.post("/api/projects", payload);
+    toast("تم إنشاء المشروع ✓", "success");
+    document.getElementById("project-modal").classList.remove("open");
+    await loadProjects();
+    document.getElementById("project-select").value = proj.id;
+    await onProjectChange(proj.id);
+  } catch (e) { toast(e.message, "error"); }
+}
+
+// ── Helpers ───────────────────────────────────────────────
+function priorityBadge(p) {
+  const map = { "حرجة": "badge-critical", "عالية": "badge-high", "متوسطة": "badge-medium", "منخفضة": "badge-low" };
+  return `<span class="badge ${map[p] || 'badge-neutral'}">${p}</span>`;
+}
+function lifecycleBadge(s) {
+  const map = { open: ["badge-info","مفتوحة"], closed: ["badge-success","مغلقة"], ongoing: ["badge-warn","جارية"], cancelled: ["badge-neutral","ملغاة"] };
+  const [cls, label] = map[s] || ["badge-neutral", s];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+function statusBadge(s) {
+  const map = { not_started: ["badge-neutral","لم يبدأ"], in_progress: ["badge-info","جارٍ"], completed: ["badge-success","مكتمل"], delayed: ["badge-danger","متأخر"], cancelled: ["badge-neutral","ملغي"] };
+  const [cls, label] = map[s] || ["badge-neutral", s];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+function statusBadgeUser(s) {
+  const map = { activated: "badge-success", pending_payment: "badge-warn", pending_approval: "badge-warn", suspended: "badge-danger", expired: "badge-danger" };
+  const labels = { activated: "مفعّل", pending_payment: "انتظار دفع", pending_approval: "انتظار موافقة", suspended: "موقوف", expired: "منتهي" };
+  return `<span class="badge ${map[s] || 'badge-neutral'}">${labels[s] || s}</span>`;
+}
+function scoreColor(score) { return score >= 15 ? "style='color:var(--critical)'" : score >= 9 ? "style='color:var(--danger)'" : score >= 4 ? "style='color:var(--accent)'" : "style='color:var(--accent2)'"; }
+function strategyLabel(s) { return {avoid:"تجنب",mitigate:"تخفيف",transfer:"نقل",accept_active:"قبول نشط",accept_passive:"قبول سلبي",exploit:"استغلال",enhance:"تعزيز",share:"مشاركة"}[s] || s; }
+function effectivenessLabel(e) { return {high:"🟢 عالية",medium:"🟡 متوسطة",low:"🔴 منخفضة",not_assessed:"⬜ لم يُقيَّم"}[e] || e; }
+
+// ── Boot ──────────────────────────────────────────────────
+window.addEventListener("DOMContentLoaded", async () => {
+  setTimeout(async () => {
+    if (api.token) {
+      try {
+        const me = await api.get("/api/auth/me");
+        localStorage.setItem("riskpro_user", JSON.stringify({ id: me.id, role: me.role, status: me.status, full_name: me.full_name }));
+        await bootApp();
+      } catch (_) { showAuth(); }
+    } else { showAuth(); }
+  }, 800);
+});
+</script>
+</body>
+</html>
