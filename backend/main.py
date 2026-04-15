@@ -160,6 +160,129 @@ def status_v1(current_user: User = Depends(get_current_user)):
 @app.post("/api/v1/activation/request", tags=["Activation"])
 def act_req_v1(payload: ActivationRequestCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     return submit_activation_request(payload, db, current_user)
+    @app.get("/api/v1/projects", response_model=List[ProjectOut], tags=["Projects"])
+def list_projects_v1(db: Session = Depends(get_db), current_user: User = Depends(get_activated_user)):
+    return list_projects(db, current_user)
+
+@app.post("/api/v1/projects", response_model=ProjectOut, tags=["Projects"])
+def create_project_v1(payload: ProjectCreate, db: Session = Depends(get_db), current_user: User = Depends(get_activated_user)):
+    return create_project(payload, db, current_user)
+
+@app.get("/api/v1/projects/{project_id}", response_model=ProjectOut, tags=["Projects"])
+def get_project_v1(project_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_activated_user)):
+    return get_project(project_id, db, current_user)
+
+@app.put("/api/v1/projects/{project_id}", response_model=ProjectOut, tags=["Projects"])
+def update_project_v1(project_id: int, payload: ProjectUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_activated_user)):
+    return update_project(project_id, payload, db, current_user)
+
+@app.get("/api/v1/risk-categories", tags=["Lookups"])
+def get_risk_categories_v1():
+    return get_risk_categories()
+
+@app.get("/api/v1/projects/{project_id}/dashboard", response_model=DashboardSummary, tags=["Dashboard"])
+def get_dashboard_v1(project_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_activated_user)):
+    return get_dashboard(project_id, db, current_user)
+
+@app.get("/api/v1/projects/{project_id}/risks", response_model=List[RiskRegisterOut], tags=["Risk Register"])
+def list_risks_v1(project_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_activated_user)):
+    return list_risks(project_id, db=db, current_user=current_user)
+
+@app.post("/api/v1/projects/{project_id}/risks", response_model=RiskRegisterOut, tags=["Risk Register"])
+def create_risk_v1(project_id: int, payload: RiskRegisterCreate, db: Session = Depends(get_db), current_user: User = Depends(get_activated_user)):
+    return create_risk(project_id, payload, db, current_user)
+
+@app.put("/api/v1/projects/{project_id}/risks/{risk_id}", response_model=RiskRegisterOut, tags=["Risk Register"])
+def update_risk_v1(project_id: int, risk_id: int, payload: RiskRegisterUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_activated_user)):
+    return update_risk(project_id, risk_id, payload, db, current_user)
+
+@app.delete("/api/v1/projects/{project_id}/risks/{risk_id}", response_model=MessageResponse, tags=["Risk Register"])
+def delete_risk_v1(project_id: int, risk_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_activated_user)):
+    return delete_risk(project_id, risk_id, db, current_user)
+
+@app.get("/api/v1/projects/{project_id}/tracking", response_model=List[ResponseTrackingOut], tags=["Tracking"])
+def list_tracking_v1(project_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_activated_user)):
+    return list_tracking(project_id, db=db, current_user=current_user)
+
+@app.put("/api/v1/projects/{project_id}/tracking/{item_id}", response_model=ResponseTrackingOut, tags=["Tracking"])
+def update_tracking_v1(project_id: int, item_id: int, payload: ResponseTrackingUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_activated_user)):
+    return update_tracking(project_id, item_id, payload, db, current_user)
+
+@app.get("/api/v1/projects/{project_id}/risk-plan", tags=["Risk Plan"])
+def get_risk_plans_v1(project_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_activated_user)):
+    return get_risk_plans(project_id, db, current_user)
+
+@app.post("/api/v1/projects/{project_id}/risk-plan", response_model=RiskPlanOut, tags=["Risk Plan"])
+def create_risk_plan_v1(project_id: int, payload: RiskPlanCreate, db: Session = Depends(get_db), current_user: User = Depends(get_activated_user)):
+    return create_risk_plan(project_id, payload, db, current_user)
+
+@app.post("/api/v1/projects/{project_id}/risk-plan/{plan_id}/advance-workflow", tags=["Risk Plan"])
+def advance_workflow_v1(project_id: int, plan_id: int, action: str = Query(...), db: Session = Depends(get_db), current_user: User = Depends(get_activated_user)):
+    return advance_plan_workflow(project_id, plan_id, action, db, current_user)
+
+@app.get("/api/v1/projects/{project_id}/raci", tags=["RACI"])
+def get_raci_v1(project_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_activated_user)):
+    return get_raci(project_id, db, current_user)
+
+@app.get("/api/v1/projects/{project_id}/business-processes", tags=["Business Process"])
+def get_bp_v1(project_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_activated_user)):
+    return get_business_processes(project_id, db, current_user)
+
+@app.post("/api/v1/projects/{project_id}/analytics/monte-carlo", response_model=MonteCarloResult, tags=["Analytics"])
+def monte_carlo_v1(project_id: int, payload: MonteCarloRequest, db: Session = Depends(get_db), current_user: User = Depends(get_activated_user)):
+    return monte_carlo(project_id, payload, db, current_user)
+
+@app.get("/api/v1/projects/{project_id}/analytics/sensitivity", response_model=SensitivityResult, tags=["Analytics"])
+def sensitivity_v1(project_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_activated_user)):
+    return sensitivity(project_id, db, current_user)
+
+@app.get("/api/v1/projects/{project_id}/export/risks", tags=["Exports"])
+def export_risks_v1(project_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_activated_user)):
+    return export_risks_excel(project_id, db, current_user)
+
+@app.get("/api/v1/projects/{project_id}/export/tracking", tags=["Exports"])
+def export_tracking_v1(project_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_activated_user)):
+    return export_tracking_excel(project_id, db, current_user)
+
+@app.get("/api/v1/projects/{project_id}/export/risk-plan/{plan_id}", tags=["Exports"])
+def export_plan_v1(project_id: int, plan_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_activated_user)):
+    return export_risk_plan_word(project_id, plan_id, db, current_user)
+
+@app.post("/api/v1/projects/{project_id}/suggest-risks", tags=["AI"])
+async def suggest_risks_v1(project_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_activated_user)):
+    return await suggest_risks(project_id, db, current_user)
+
+@app.get("/api/v1/admin/stats", response_model=AdminStats, tags=["Admin"])
+def admin_stats_v1(db: Session = Depends(get_db), admin: User = Depends(require_admin)):
+    return admin_stats(db, admin)
+
+@app.get("/api/v1/admin/users", tags=["Admin"])
+def admin_users_v1(page: int = 1, page_size: int = 20, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
+    return admin_list_users(page, page_size, db=db, _admin=admin)
+
+@app.put("/api/v1/admin/users/{user_id}", response_model=UserOut, tags=["Admin"])
+def admin_update_user_v1(user_id: int, payload: AdminUserUpdate, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
+    return admin_update_user(user_id, payload, db, admin)
+
+@app.get("/api/v1/admin/activation-requests", tags=["Admin"])
+def admin_act_req_v1(db: Session = Depends(get_db), admin: User = Depends(require_admin)):
+    return admin_list_activation_requests(db, admin)
+
+@app.post("/api/v1/admin/activation-requests/action", tags=["Admin"])
+def admin_act_action_v1(payload: AdminApproveRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
+    return admin_process_activation(payload, background_tasks, db, admin)
+
+@app.post("/api/v1/admin/users/{user_id}/generate-code", tags=["Admin"])
+def admin_gen_code_v1(user_id: int, duration_days: int = 365, background_tasks: BackgroundTasks = None, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
+    return admin_generate_code(user_id, duration_days, background_tasks, db, admin)
+
+@app.get("/api/v1/admin/projects", tags=["Admin"])
+def admin_projects_v1(db: Session = Depends(get_db), admin: User = Depends(require_admin)):
+    return admin_list_projects(db, admin)
+
+@app.get("/api/v1/admin/export/master", tags=["Admin"])
+def admin_export_v1(db: Session = Depends(get_db), admin: User = Depends(require_admin)):
+    return admin_export_master(db, admin)
 def health_v1(db: Session = Depends(get_db)):
     try:
         db.execute(text("SELECT 1"))
