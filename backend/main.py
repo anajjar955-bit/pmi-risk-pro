@@ -137,6 +137,29 @@ def root():
     return {"status": "ok", "platform": "PMI Risk Pro", "version": "1.0.0"}
 
 @app.get("/api/v1/health", tags=["Health"])
+@app.post("/api/v1/auth/register", response_model=UserOut, tags=["Auth"])
+def register_v1(payload: UserRegister, db: Session = Depends(get_db)):
+    return register(payload, db)
+
+@app.post("/api/v1/auth/login", response_model=TokenResponse, tags=["Auth"])
+def login_v1(payload: UserLogin, db: Session = Depends(get_db)):
+    return login(payload, db)
+
+@app.get("/api/v1/auth/me", response_model=UserOut, tags=["Auth"])
+def get_me_v1(current_user: User = Depends(get_current_user)):
+    return current_user
+
+@app.post("/api/v1/activation/verify", response_model=MessageResponse, tags=["Activation"])
+def verify_v1(payload: ActivationCodeVerify, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    return verify_activation_code(payload, db, current_user)
+
+@app.get("/api/v1/activation/status", tags=["Activation"])
+def status_v1(current_user: User = Depends(get_current_user)):
+    return get_activation_status(current_user)
+
+@app.post("/api/v1/activation/request", tags=["Activation"])
+def act_req_v1(payload: ActivationRequestCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    return submit_activation_request(payload, db, current_user)
 def health_v1(db: Session = Depends(get_db)):
     try:
         db.execute(text("SELECT 1"))
