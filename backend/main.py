@@ -136,7 +136,14 @@ def _next_risk_id(db: Session, project_id: int) -> str:
 def root():
     return {"status": "ok", "platform": "PMI Risk Pro", "version": "1.0.0"}
 
-
+@app.get("/api/v1/health", tags=["Health"])
+def health_v1(db: Session = Depends(get_db)):
+    try:
+        db.execute(text("SELECT 1"))
+        db_ok = True
+    except Exception:
+        db_ok = False
+    return {"status": "healthy" if db_ok else "degraded", "database": "connected" if db_ok else "error", "version": "2.0.0", "timestamp": datetime.utcnow().isoformat()}
 @app.get("/api/health", tags=["Health"])
 def health():
     return {"status": "healthy", "timestamp": datetime.utcnow().isoformat()}
