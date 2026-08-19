@@ -53,7 +53,7 @@
   #cap2 .h2 { color:#fff; }
   #cap2 .h2 b { color:#FFC63D; }
   #phone {
-    position:absolute; left:190px; top:130px; width:440px; height:830px;
+    position:absolute; left:190px; top:120px; width:420px; height:740px;
     border-radius:56px; background:linear-gradient(180deg,#1A3A5E,#153252);
     border:5px solid #4A6E96; box-shadow:0 36px 100px rgba(8,25,45,.55), 0 0 0 2px rgba(255,255,255,.08) inset;
   }
@@ -118,7 +118,7 @@
   #bars { flex:1; display:flex; align-items:flex-end; gap:14px; height:170px; }
   #bars .b { flex:1; border-radius:8px 8px 3px 3px; background:linear-gradient(180deg,#7CB8FF,#3B82F6); }
   #scurve { flex:1.15; height:170px; }
-  #note3 { position:absolute; bottom:80px; left:0; right:0; text-align:center; }
+  #note3 { position:absolute; bottom:210px; left:0; right:0; text-align:center; }
   #note3 .body { color:#D6F5E9; }
   #note3 b { color:#8CF5D6; }
 
@@ -140,7 +140,7 @@
   .tcard .tx small { display:block; margin-top:6px; font-weight:600; font-size:30px; color:#CBDFF5; }
 
   /* ---------- scene 5 : reveal ---------- */
-  #s5 .wrap { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:0 100px; }
+  #s5 .wrap { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:0 100px 150px; }
   #s5 .pre { font-weight:800; font-size:56px; color:#DBE9FA; }
   #s5 .big { margin-top:22px; font-weight:900; font-size:135px; line-height:1.25; color:#fff; text-shadow:0 0 90px rgba(255,198,61,.45); }
   #s5 .big b { color:#FFC63D; }
@@ -168,6 +168,23 @@
     background:linear-gradient(120deg,#FFB800,#FFD84D); color:#173456; font-weight:900; font-size:50px;
     box-shadow:0 22px 70px rgba(255,184,0,.45); }
   #seats { margin-top:26px; font-weight:800; font-size:36px; color:#FFB3B3; }
+
+  /* ---------- presenter bar (audio-reactive) ---------- */
+  #pbar { position:absolute; left:0; right:0; bottom:0; height:230px; z-index:60; opacity:0;
+    background:linear-gradient(0deg, rgba(8,22,40,.55), rgba(8,22,40,0)); }
+  #pphoto {
+    position:absolute; right:70px; bottom:34px; width:168px; height:168px; border-radius:50%;
+    object-fit:cover; object-position:center 18%;
+    border:5px solid #FFC63D; box-shadow:0 14px 44px rgba(8,22,40,.55);
+    background:#153252;
+  }
+  #pring { position:absolute; right:62px; bottom:26px; width:184px; height:184px; border-radius:50%;
+    border:3px solid rgba(255,198,61,.9); pointer-events:none; }
+  #pwave { position:absolute; right:278px; bottom:88px; height:64px; display:flex; align-items:center; gap:9px; direction:ltr; }
+  #pwave i { display:block; width:9px; border-radius:6px; background:linear-gradient(180deg,#FFD86B,#FFB800); height:10px; }
+  #pname { position:absolute; right:420px; bottom:76px; text-align:right; }
+  #pname .n1 { font-weight:900; font-size:40px; color:#fff; }
+  #pname .n2 { font-weight:600; font-size:27px; color:#CFE1F6; margin-top:2px; }
 </style>
 </head>
 <body>
@@ -293,6 +310,14 @@
     </div>
   </section>
 
+  <!-- Presenter (audio-reactive) -->
+  <div id="pbar">
+    <div id="pname"><div class="n1">م. أكرم النجار</div><div class="n2">مدرب الورشة · PMhouse</div></div>
+    <div id="pwave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div id="pring"></div>
+    <img id="pphoto" src="presenter.jpg" onerror="document.getElementById('pbar').style.display='none'">
+  </div>
+
   <!-- Scene 6 -->
   <section class="scene" id="s6">
     <div class="wrap">
@@ -310,6 +335,7 @@
   </section>
 </div>
 
+<script src="amp.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const c01 = v => Math.max(0, Math.min(1, v));
@@ -446,6 +472,20 @@ function render(t) {
   }
 
   $('brand').style.opacity = c01(t / 800) * (1 - seg(t, SC.s6[0] - 200, 400));
+
+  // ---- presenter bar: waveform + ring driven by the VO amplitude ----
+  const fi = Math.min(AMP.length - 1, Math.max(0, Math.floor(t / 1000 * 30)));
+  const amp = typeof AMP !== 'undefined' ? AMP[fi] : 0;
+  $('pbar').style.opacity = seg(t, 600, 600) * (1 - seg(t, SC.s6[0] - 200, 400));
+  const bars = $('pwave').children;
+  for (let i = 0; i < bars.length; i++) {
+    const f = .55 + .45 * Math.sin(i * 1.7 + t / 95);
+    bars[i].style.height = Math.max(8, amp * 62 * f + amp * 10) + 'px';
+    bars[i].style.opacity = .45 + .55 * amp;
+  }
+  $('pring').style.opacity = .25 + .75 * amp;
+  $('pring').style.transform = `scale(${1 + amp * .06})`;
+  $('pphoto').style.transform = `scale(${1 + amp * .015})`;
 }
 
 window.seek = render;
