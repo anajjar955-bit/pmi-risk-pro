@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>PMhouse — ورشة الذكاء الاصطناعي</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#000; }
+  #stage {
+    position:relative; width:1080px; height:1920px; overflow:hidden;
+    font-family:'Cairo', sans-serif; direction:rtl;
+    background:
+      radial-gradient(900px 700px at 80% 12%, rgba(45,120,220,.16), transparent 65%),
+      radial-gradient(1000px 800px at 15% 88%, rgba(245,179,1,.10), transparent 60%),
+      linear-gradient(165deg,#0B1B33 0%, #0E2140 55%, #0A1830 100%);
+    color:#fff;
+  }
+  #grid {
+    position:absolute; inset:0; opacity:.35;
+    background-image:
+      linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+    background-size:90px 90px;
+  }
+  .glow { position:absolute; border-radius:50%; filter:blur(90px); }
+  #glowA { width:520px; height:520px; background:rgba(56,132,255,.20); top:-120px; right:-120px; }
+  #glowB { width:620px; height:620px; background:rgba(245,179,1,.13); bottom:-180px; left:-160px; }
+
+  #brand {
+    position:absolute; top:64px; left:0; right:0; text-align:center; z-index:50;
+  }
+  #brand .logo {
+    display:inline-flex; align-items:center; gap:16px;
+    padding:14px 38px; border-radius:60px;
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14);
+    font-weight:800; font-size:38px; letter-spacing:.5px;
+  }
+  #brand .logo b { color:#F5B301; }
+
+  .scene { position:absolute; inset:0; opacity:0; }
+
+  /* ---------- shared ---------- */
+  .kicker {
+    display:inline-block; padding:10px 34px; border-radius:50px; font-weight:800;
+    font-size:40px; background:rgba(245,179,1,.14); color:#F5B301;
+    border:1px solid rgba(245,179,1,.35);
+  }
+  .h1 { font-weight:900; font-size:88px; line-height:1.35; }
+  .h2 { font-weight:800; font-size:58px; line-height:1.5; }
+  .body { font-weight:600; font-size:46px; line-height:1.65; color:#DCE6F5; }
+
+  /* ---------- scene 1 : hook ---------- */
+  #s1 .wrap { position:absolute; inset:0; padding:210px 80px 0; text-align:center; }
+  #clock {
+    display:inline-flex; align-items:baseline; gap:18px; font-weight:900; font-size:120px;
+    color:#fff; text-shadow:0 0 60px rgba(245,179,1,.35);
+  }
+  #clock small { font-size:52px; font-weight:800; color:#F5B301; }
+  #cap1 { margin-top:26px; }
+  #phone {
+    position:absolute; left:50%; top:620px; width:560px; height:860px; margin-left:-280px;
+    border-radius:70px; background:linear-gradient(180deg,#101E36,#0C1830);
+    border:6px solid #2A3B58; box-shadow:0 40px 120px rgba(0,0,0,.6), 0 0 0 2px rgba(255,255,255,.05) inset;
+  }
+  #phone .notch { position:absolute; top:22px; left:50%; width:180px; height:34px; margin-left:-90px; border-radius:20px; background:#060D1B; }
+  #phone .ptime { position:absolute; top:120px; width:100%; text-align:center; font-weight:900; font-size:110px; color:#EAF1FC; }
+  #phone .pdate { position:absolute; top:265px; width:100%; text-align:center; font-weight:600; font-size:36px; color:#8FA3C4; }
+  #notif {
+    position:absolute; top:390px; left:26px; right:26px; border-radius:34px; padding:30px 34px;
+    background:rgba(255,255,255,.97); color:#0B1B33; text-align:right;
+    box-shadow:0 24px 70px rgba(0,0,0,.5);
+  }
+  #notif .nh { display:flex; align-items:center; gap:14px; font-weight:800; font-size:30px; color:#5A6B87; }
+  #notif .nh .dot { width:14px; height:14px; border-radius:50%; background:#34D399; }
+  #notif .nt { margin-top:12px; font-weight:900; font-size:40px; }
+  #notif .nb { margin-top:6px; font-weight:600; font-size:32px; color:#44536E; line-height:1.55; }
+  #cap2 { position:absolute; left:60px; right:60px; top:1560px; text-align:center; }
+  #cap2 .h2 { color:#fff; }
+  #cap2 .h2 b { color:#F5B301; }
+
+  /* ---------- scene 2 : the old way ---------- */
+  #s2 .wrap { position:absolute; inset:0; padding:250px 90px 0; text-align:center; }
+  #hours { margin-top:60px; font-weight:900; font-size:210px; line-height:1; color:#F87171; text-shadow:0 0 80px rgba(248,113,113,.3); }
+  #hoursLbl { margin-top:6px; font-weight:800; font-size:60px; color:#FCA5A5; }
+  #manual { margin-top:34px; }
+  #list2 { margin-top:56px; display:flex; flex-direction:column; gap:34px; align-items:stretch; }
+  .pain {
+    display:flex; align-items:center; gap:26px; text-align:right;
+    background:rgba(248,113,113,.08); border:1px solid rgba(248,113,113,.28);
+    border-radius:28px; padding:30px 38px;
+  }
+  .pain .ic { flex:0 0 auto; width:64px; height:64px; border-radius:18px; background:rgba(248,113,113,.16);
+    display:flex; align-items:center; justify-content:center; font-size:36px; }
+  .pain .tx { font-weight:700; font-size:44px; color:#F3D9DD; }
+  .pain .tx span.en { direction:ltr; unicode-bidi:embed; }
+
+  /* ---------- scene 3 : the agent ---------- */
+  #s3 .wrap { position:absolute; inset:0; padding:225px 80px 0; text-align:center; }
+  #s3 .flow { margin-top:48px; display:flex; flex-direction:column; align-items:center; gap:0; }
+  .node {
+    width:860px; border-radius:32px; padding:30px 40px; text-align:right;
+    background:rgba(52,211,153,.07); border:1px solid rgba(52,211,153,.30);
+    display:flex; align-items:center; gap:28px;
+  }
+  .node .ic { flex:0 0 auto; width:80px; height:80px; border-radius:22px; background:rgba(52,211,153,.14);
+    display:flex; align-items:center; justify-content:center; font-size:44px; }
+  .node .tx { font-weight:700; font-size:42px; line-height:1.5; color:#E7FBF3; }
+  .node .tx b { color:#6EE7B7; }
+  .node .tx span.en { direction:ltr; unicode-bidi:embed; white-space:nowrap; }
+  .arrow { height:64px; display:flex; align-items:center; justify-content:center; color:#34D399; font-size:52px; font-weight:900; }
+  #dash {
+    width:860px; border-radius:32px; padding:28px 34px 22px;
+    background:#0D2138; border:1px solid rgba(56,132,255,.35); text-align:right;
+  }
+  #dash .dt { display:flex; align-items:center; justify-content:space-between; }
+  #dash .dt .ti { font-weight:800; font-size:30px; color:#9DB8DF; }
+  #dash .dt .dots { display:flex; gap:10px; }
+  #dash .dt .dots i { width:16px; height:16px; border-radius:50%; display:block; }
+  #dash .cwrap { margin-top:16px; display:flex; gap:26px; align-items:flex-end; }
+  #bars { flex:1; display:flex; align-items:flex-end; gap:20px; height:190px; }
+  #bars .b { flex:1; border-radius:10px 10px 4px 4px; background:linear-gradient(180deg,#4E9BFF,#2563EB); }
+  #scurve { flex:1.3; height:190px; }
+  #note3 { margin-top:34px; }
+  #note3 .body { color:#BFE9DA; font-size:40px; }
+
+  /* ---------- scene 4 : digital team ---------- */
+  #s4 .wrap { position:absolute; inset:0; padding:300px 90px 0; text-align:center; }
+  #team { margin-top:24px; }
+  #cards4 { margin-top:70px; display:flex; flex-direction:column; gap:40px; }
+  .tcard {
+    display:flex; align-items:center; gap:30px; text-align:right;
+    background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.14);
+    border-radius:32px; padding:38px 42px;
+  }
+  .tcard .ic { flex:0 0 auto; width:96px; height:96px; border-radius:26px;
+    background:linear-gradient(145deg, rgba(245,179,1,.22), rgba(245,179,1,.08));
+    border:1px solid rgba(245,179,1,.35);
+    display:flex; align-items:center; justify-content:center; font-size:50px; }
+  .tcard .tx { font-weight:800; font-size:48px; line-height:1.5; }
+  .tcard .tx small { display:block; font-weight:600; font-size:36px; color:#AFC2DE; }
+
+  /* ---------- scene 5 : reveal ---------- */
+  #s5 .wrap { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:0 80px; }
+  #s5 .pre { font-weight:800; font-size:64px; color:#C9D8EE; }
+  #s5 .big { margin-top:30px; font-weight:900; font-size:150px; line-height:1.25; color:#fff; text-shadow:0 0 90px rgba(245,179,1,.35); }
+  #s5 .big b { color:#F5B301; }
+  #u5 { height:14px; width:0; margin:34px auto 0; border-radius:10px; background:linear-gradient(90deg,#F5B301,#FFD866); }
+  #s5 .post { margin-top:60px; font-weight:700; font-size:50px; color:#9DB8DF; }
+
+  /* ---------- scene 6 : details / CTA ---------- */
+  #s6 .wrap { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:0 70px; }
+  #card6 {
+    width:100%; border-radius:48px; padding:80px 60px 70px;
+    background:linear-gradient(170deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+    border:1px solid rgba(255,255,255,.16);
+    box-shadow:0 50px 140px rgba(0,0,0,.5);
+  }
+  #card6 .present { font-weight:800; font-size:42px; color:#F5B301; letter-spacing:.5px; }
+  #card6 .wt { margin-top:26px; font-weight:900; font-size:74px; line-height:1.4; }
+  #card6 .wt b { color:#F5B301; }
+  #inst { margin-top:36px; display:inline-flex; align-items:center; gap:20px; padding:18px 44px; border-radius:60px;
+    background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.16); font-weight:800; font-size:46px; }
+  #date6 { margin-top:36px; display:inline-flex; align-items:center; gap:18px; padding:20px 50px; border-radius:60px;
+    background:rgba(52,211,153,.12); border:1px solid rgba(52,211,153,.4); font-weight:900; font-size:52px; color:#6EE7B7; }
+  #cta { margin-top:70px; display:inline-block; padding:34px 90px; border-radius:70px;
+    background:linear-gradient(120deg,#F5B301,#FFCE3D); color:#0B1B33; font-weight:900; font-size:58px;
+    box-shadow:0 24px 80px rgba(245,179,1,.4); }
+  #seats { margin-top:34px; font-weight:800; font-size:42px; color:#FCA5A5; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="grid"></div>
+  <div id="glowA" class="glow"></div>
+  <div id="glowB" class="glow"></div>
+
+  <div id="brand"><span class="logo">🏛️ <span><b>PM</b>house</span></span></div>
+
+  <!-- Scene 1 -->
+  <section class="scene" id="s1">
+    <div class="wrap">
+      <div id="clock">٧:٠٠ <small>الصبح ☀️</small></div>
+      <div id="cap1" class="h2">تخيّل بتفتح موبايلك أول ما تصحى…</div>
+      <div id="phone">
+        <div class="notch"></div>
+        <div class="ptime">٧:٠٠</div>
+        <div class="pdate">الجمعة ٢٢ أغسطس</div>
+        <div id="notif">
+          <div class="nh"><span class="dot"></span> تقارير المشروعات · الآن</div>
+          <div class="nt">📊 تقرير أداء المشروعات جاهز</div>
+          <div class="nb">اتحدّث ووصلك أوتوماتيك… من غير تدخّل من حد</div>
+        </div>
+      </div>
+      <div id="cap2"><div class="h2">تقرير المشروعات <b>مستنيك</b>… من غير ما حد يعمله ✨</div></div>
+    </div>
+  </section>
+
+  <!-- Scene 2 -->
+  <section class="scene" id="s2">
+    <div class="wrap">
+      <div id="k2" class="kicker">زمان؟ 😮‍💨</div>
+      <div id="hours">٤ ساعات</div>
+      <div id="hoursLbl">كل أسبوع… ضايعة</div>
+      <div id="manual" class="h2">أجمّع التقرير بإيدي:</div>
+      <div id="list2">
+        <div class="pain" id="p1"><span class="ic">📉</span><span class="tx">نسب الإنجاز لكل مشروع</span></div>
+        <div class="pain" id="p2"><span class="ic">🧾</span><span class="tx">المستخلصات المتأخرة</span></div>
+        <div class="pain" id="p3"><span class="ic">📋</span><span class="tx">الـ <span class="en">Change Requests</span> المعلّقة</span></div>
+        <div class="pain" id="p4"><span class="ic">📐</span><span class="tx">انحراف الـ <span class="en">S-Curve</span> عن الـ <span class="en">Baseline</span></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Scene 3 -->
+  <section class="scene" id="s3">
+    <div class="wrap">
+      <div id="k3" class="kicker">دلوقتي 🤖</div>
+      <div id="t3" class="h1" style="font-size:74px; margin-top:24px;">الشغل ده كله بيعمله<br><b style="color:#6EE7B7;">وكيل ذكي بنيته بنفسي</b></div>
+      <div class="flow">
+        <div style="height:40px"></div>
+        <div class="node" id="n1"><span class="ic">📄</span><span class="tx">بيقرا <b>شيت قاعدة البيانات</b> بتاع المشروعات</span></div>
+        <div class="arrow" id="a1">↓</div>
+        <div class="node" id="n2"><span class="ic">📊</span><span class="tx">بيحدّث <b>داشبورد تفاعلية</b> زي <span class="en">Power BI</span></span></div>
+        <div class="arrow" id="a2">↓</div>
+        <div id="dash">
+          <div class="dt">
+            <div class="dots"><i style="background:#F87171"></i><i style="background:#FBBF24"></i><i style="background:#34D399"></i></div>
+            <div class="ti">Dashboard · Live</div>
+          </div>
+          <div class="cwrap">
+            <div id="bars">
+              <div class="b" id="b1"></div><div class="b" id="b2"></div><div class="b" id="b3"></div><div class="b" id="b4"></div><div class="b" id="b5"></div>
+            </div>
+            <svg id="scurve" viewBox="0 0 300 190">
+              <path d="M10,180 C90,175 150,150 190,95 C220,55 250,30 290,18" fill="none" stroke="#5A6B87" stroke-width="4" stroke-dasharray="10 10"/>
+              <path id="sc" d="M10,180 C80,178 140,160 185,110 C225,65 255,40 290,30" fill="none" stroke="#F5B301" stroke-width="7" stroke-linecap="round"/>
+            </svg>
+          </div>
+        </div>
+        <div class="arrow" id="a3">↓</div>
+        <div class="node" id="n3"><span class="ic">📱</span><span class="tx">وبيبعت التقرير <b>على موبايلك</b> في الميعاد اللي تختاره</span></div>
+      </div>
+      <div id="note3"><div class="body">⚡ أي تعديل في الشيت… ينعكس في التقرير <b style="color:#6EE7B7;">فورًا</b></div></div>
+    </div>
+  </section>
+
+  <!-- Scene 4 -->
+  <section class="scene" id="s4">
+    <div class="wrap">
+      <div id="k4" class="h2">ومش تقرير وخلاص…</div>
+      <div id="team" class="h1">ده <b style="color:#F5B301;">فريق رقمي كامل</b> شغّال معاك 👥</div>
+      <div id="cards4">
+        <div class="tcard" id="c1"><span class="ic">📈</span><span class="tx">يحلل ملفات الإكسيل<small>مهما كانت كبيرة أو معقدة</small></span></div>
+        <div class="tcard" id="c2"><span class="ic">⚖️</span><span class="tx">يقارن المخطط بالفعلي<small>وينبّهك للانحراف قبل ما يكبر</small></span></div>
+        <div class="tcard" id="c3"><span class="ic">🕐</span><span class="tx">يشتغل ٢٤/٧<small>من غير أخطاء… ولا إجازات</small></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Scene 5 -->
+  <section class="scene" id="s5">
+    <div class="wrap">
+      <div class="pre" id="pre5">وفي الورشة دي…</div>
+      <div class="big" id="big5">هتبنيه <b>بإيدك</b> 🛠️</div>
+      <div id="u5"></div>
+      <div class="post" id="post5">خطوة بخطوة… حتى لو أول مرة تستخدم الذكاء الاصطناعي</div>
+    </div>
+  </section>
+
+  <!-- Scene 6 -->
+  <section class="scene" id="s6">
+    <div class="wrap">
+      <div id="card6">
+        <div class="present" id="pr6">PMhouse تقدّم</div>
+        <div class="wt" id="wt6">ورشة <b>الذكاء الاصطناعي</b><br>في إدارة المشروعات</div>
+        <div><span id="inst">👨‍🏫 مع م. أكرم النجار</span></div>
+        <div><span id="date6">📅 يومي ٢٢ و ٢٣ أغسطس</span></div>
+        <div><span id="cta">احجز مكانك دلوقتي</span></div>
+        <div id="seats">🔥 الأماكن محدودة</div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const c01 = v => Math.max(0, Math.min(1, v));
+const eo  = t => 1 - Math.pow(1 - t, 3);          // ease-out cubic
+const eio = t => t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2;
+const seg = (t, s, d) => c01((t - s) / d);        // 0→1 over [s, s+d]
+
+// fade-up: progress p (0..1), rise distance dy, optional start scale
+function fu(el, p, dy = 60, sc = null) {
+  const e = eo(p);
+  el.style.opacity = p;
+  let tr = `translateY(${(1 - e) * dy}px)`;
+  if (sc != null) tr += ` scale(${sc + (1 - sc) * e})`;
+  el.style.transform = tr;
+}
+function pop(el, p) { // pop-in with slight overshoot
+  const e = eo(p);
+  el.style.opacity = p;
+  const s = p <= 0 ? .7 : .7 + .38 * e - .08 * Math.sin(e * Math.PI);
+  el.style.transform = `scale(${s})`;
+}
+
+const AR = n => n.toLocaleString('ar-EG');
+
+// scene windows [start, end] in ms
+const SC = { s1:[0,6500], s2:[6500,15000], s3:[15000,25500], s4:[25500,33500], s5:[33500,40000], s6:[40000,50000] };
+const DUR = 50000;
+const FADE = 450;
+
+function sceneOp(t, [a, b]) {
+  if (t < a || t >= b) return 0;
+  return c01((t - a) / FADE) * c01((b - t) / FADE);
+}
+
+function render(t) {
+  // ambient glows drift
+  $('glowA').style.transform = `translate(${Math.sin(t/4000)*40}px, ${Math.cos(t/5000)*30}px)`;
+  $('glowB').style.transform = `translate(${Math.cos(t/4500)*50}px, ${Math.sin(t/5200)*35}px)`;
+
+  for (const k in SC) {
+    const el = $(k), o = sceneOp(t, SC[k]);
+    el.style.opacity = o;
+    el.style.display = o > 0 ? 'block' : 'none';
+  }
+
+  // ---- scene 1 ----
+  if (t < SC.s1[1] + FADE) {
+    const u = t - SC.s1[0];
+    fu($('clock'), seg(u, 200, 700), 40);
+    fu($('cap1'),  seg(u, 700, 700), 50);
+    fu($('phone'), seg(u, 1300, 900), 140, .94);
+    const np = seg(u, 2600, 650);
+    $('notif').style.opacity = np;
+    $('notif').style.transform = `translateY(${(1-eo(np))*-70}px) scale(${.92+.08*eo(np)})`;
+    fu($('cap2'), seg(u, 3900, 800), 60);
+  }
+
+  // ---- scene 2 ----
+  if (t >= SC.s2[0] - FADE && t < SC.s2[1] + FADE) {
+    const u = t - SC.s2[0];
+    fu($('k2'), seg(u, 150, 500), 30);
+    const hp = seg(u, 600, 1100);
+    fu($('hours'), c01(hp*3), 30, .8);
+    $('hours').textContent = AR(Math.round(eo(hp) * 4)) + ' ساعات';
+    fu($('hoursLbl'), seg(u, 1400, 600), 30);
+    fu($('manual'), seg(u, 2100, 600), 40);
+    ['p1','p2','p3','p4'].forEach((id, i) => {
+      const p = seg(u, 2800 + i * 850, 650);
+      const el = $(id);
+      el.style.opacity = p;
+      el.style.transform = `translateX(${(1 - eo(p)) * -80}px)`;
+    });
+  }
+
+  // ---- scene 3 ----
+  if (t >= SC.s3[0] - FADE && t < SC.s3[1] + FADE) {
+    const u = t - SC.s3[0];
+    fu($('k3'), seg(u, 150, 500), 30);
+    fu($('t3'), seg(u, 550, 700), 50);
+    fu($('n1'), seg(u, 1600, 600), 60);
+    $('a1').style.opacity = seg(u, 2200, 400);
+    fu($('n2'), seg(u, 2500, 600), 60);
+    $('a2').style.opacity = seg(u, 3100, 400);
+    fu($('dash'), seg(u, 3400, 700), 70, .95);
+    // bars grow
+    [58,86,44,72,95].forEach((h, i) => {
+      const p = eo(seg(u, 4100 + i * 180, 700));
+      $('b' + (i+1)).style.height = Math.max(4, h * p / 100 * 190) + 'px';
+    });
+    // S-curve draws
+    const sc = $('sc'), L = sc.getTotalLength();
+    sc.style.strokeDasharray = L;
+    sc.style.strokeDashoffset = L * (1 - eo(seg(u, 4400, 1600)));
+    $('a3').style.opacity = seg(u, 6100, 400);
+    fu($('n3'), seg(u, 6400, 600), 60);
+    fu($('note3'), seg(u, 7600, 700), 40);
+  }
+
+  // ---- scene 4 ----
+  if (t >= SC.s4[0] - FADE && t < SC.s4[1] + FADE) {
+    const u = t - SC.s4[0];
+    fu($('k4'), seg(u, 150, 550), 40);
+    fu($('team'), seg(u, 800, 700), 50);
+    ['c1','c2','c3'].forEach((id, i) => pop($(id), seg(u, 1900 + i * 900, 650)));
+  }
+
+  // ---- scene 5 ----
+  if (t >= SC.s5[0] - FADE && t < SC.s5[1] + FADE) {
+    const u = t - SC.s5[0];
+    fu($('pre5'), seg(u, 200, 600), 40);
+    pop($('big5'), seg(u, 1000, 800));
+    $('u5').style.width = (eo(seg(u, 1900, 700)) * 560) + 'px';
+    fu($('post5'), seg(u, 2800, 700), 40);
+  }
+
+  // ---- scene 6 ----
+  if (t >= SC.s6[0] - FADE) {
+    const u = t - SC.s6[0];
+    fu($('card6'), seg(u, 150, 800), 90, .95);
+    fu($('pr6'),  seg(u, 700, 500), 30);
+    fu($('wt6'),  seg(u, 1000, 600), 40);
+    fu($('inst'), seg(u, 1700, 550), 40);
+    fu($('date6'),seg(u, 2300, 550), 40);
+    const cp = seg(u, 3000, 600);
+    pop($('cta'), cp);
+    if (cp >= 1) { // heartbeat pulse
+      const pulse = 1 + .035 * Math.sin((u - 3600) / 260);
+      $('cta').style.transform = `scale(${pulse})`;
+    }
+    fu($('seats'), seg(u, 3700, 550), 30);
+  }
+
+  // brand chip: hidden during scene 5 & 6 center reveals? keep always, gentle fade-in at start
+  $('brand').style.opacity = c01(t / 800);
+}
+
+window.seek = render;
+window.DUR = DUR;
+
+// live preview when opened in a normal browser (not frame-render mode)
+if (!location.search.includes('render')) {
+  const t0 = performance.now();
+  (function loop(){ render((performance.now() - t0) % DUR); requestAnimationFrame(loop); })();
+} else {
+  render(0);
+}
+</script>
+</body>
+</html>
