@@ -9,7 +9,7 @@ import path from 'node:path';
 
 const [,, CHROME, FFMPEG, OUT, FPS_ARG] = process.argv;
 const FPS = Number(FPS_ARG || 30);
-const W = 1080, H = 1920;
+const W = 1920, H = 1080;
 const here = path.dirname(fileURLToPath(import.meta.url));
 const pageUrl = 'file://' + path.join(here, 'promo.html') + '?render=1';
 
