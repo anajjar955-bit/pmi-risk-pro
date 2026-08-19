@@ -333,9 +333,9 @@ function pop(el, p) { // pop-in with slight overshoot
 
 const AR = n => n.toLocaleString('ar-EG');
 
-// scene windows [start, end] in ms
-const SC = { s1:[0,6500], s2:[6500,15000], s3:[15000,25500], s4:[25500,33500], s5:[33500,40000], s6:[40000,50000] };
-const DUR = 50000;
+// scene windows [start, end] in ms — synced to the Egyptian VO paragraph starts
+const SC = { s1:[0,8200], s2:[8200,23700], s3:[23700,44700], s4:[44700,55600], s5:[55600,62900], s6:[62900,76000] };
+const DUR = 76000;
 const FADE = 450;
 
 function sceneOp(t, [a, b]) {
@@ -359,26 +359,27 @@ function render(t) {
     const u = t - SC.s1[0];
     fu($('clock'), seg(u, 200, 700), 40);
     fu($('cap1'),  seg(u, 700, 700), 50);
-    const pp = seg(u, 1300, 900);
+    const pp = seg(u, 1400, 900);
     $('phone').style.opacity = pp;
     $('phone').style.transform = `translateX(${(1-eo(pp))*-140}px) scale(${.94+.06*eo(pp)})`;
-    const np = seg(u, 2600, 650);
+    const np = seg(u, 3300, 650);   // «تلاقي تقرير أداء المشروعات جاهز»
     $('notif').style.opacity = np;
     $('notif').style.transform = `translateY(${(1-eo(np))*-60}px) scale(${.92+.08*eo(np)})`;
-    fu($('cap2'), seg(u, 3900, 800), 60);
+    fu($('cap2'), seg(u, 4100, 800), 60);
   }
 
   // ---- scene 2 ----
   if (t >= SC.s2[0] - FADE && t < SC.s2[1] + FADE) {
     const u = t - SC.s2[0];
     fu($('k2'), seg(u, 150, 500), 30);
-    const hp = seg(u, 600, 1100);
+    const hp = seg(u, 700, 1100);   // «كنت بضيّع أربع ساعات»
     fu($('hours'), c01(hp*3), 30, .8);
     $('hours').textContent = AR(Math.round(eo(hp) * 4)) + ' ساعات';
-    fu($('hoursLbl'), seg(u, 1400, 600), 30);
-    fu($('manual'), seg(u, 2100, 600), 40);
+    fu($('hoursLbl'), seg(u, 2000, 600), 30);
+    fu($('manual'), seg(u, 4000, 600), 40);  // «أجمّع التقرير بإيدي»
+    const painAt = [7800, 9100, 11000, 13100]; // each item lands on its word in the VO
     ['p1','p2','p3','p4'].forEach((id, i) => {
-      const p = seg(u, 2800 + i * 850, 650);
+      const p = seg(u, painAt[i], 600);
       const el = $(id);
       el.style.opacity = p;
       el.style.transform = `translateX(${(1 - eo(p)) * -80}px)`;
@@ -388,59 +389,60 @@ function render(t) {
   // ---- scene 3 ----
   if (t >= SC.s3[0] - FADE && t < SC.s3[1] + FADE) {
     const u = t - SC.s3[0];
-    fu($('k3'), seg(u, 150, 500), 30);
-    fu($('t3'), seg(u, 550, 700), 50);
-    fu($('n1'), seg(u, 1600, 600), 60);
-    $('a1').style.opacity = seg(u, 2200, 400);
-    fu($('n2'), seg(u, 2500, 600), 60);
-    $('a2').style.opacity = seg(u, 3100, 400);
-    fu($('dash'), seg(u, 3400, 700), 70, .95);
+    fu($('k3'), seg(u, 200, 500), 30);
+    fu($('t3'), seg(u, 700, 700), 50);
+    fu($('n1'), seg(u, 4400, 600), 60);        // «بيقرا شيت قاعدة البيانات»
+    $('a1').style.opacity = seg(u, 5600, 400);
+    fu($('n2'), seg(u, 6500, 600), 60);        // «بيحدّث داشبورد تفاعلية»
+    $('a2').style.opacity = seg(u, 7600, 400);
+    fu($('dash'), seg(u, 8000, 700), 70, .95);
     // bars grow
     [58,86,44,72,95].forEach((h, i) => {
-      const p = eo(seg(u, 4100 + i * 180, 700));
+      const p = eo(seg(u, 8800 + i * 180, 700));
       $('b' + (i+1)).style.height = Math.max(4, h * p / 100 * 170) + 'px';
     });
     // S-curve draws
     const sc = $('sc'), L = sc.getTotalLength();
     sc.style.strokeDasharray = L;
-    sc.style.strokeDashoffset = L * (1 - eo(seg(u, 4400, 1600)));
-    $('a3').style.opacity = seg(u, 6100, 400);
-    fu($('n3'), seg(u, 6400, 600), 60);
-    fu($('note3'), seg(u, 7600, 700), 40);
+    sc.style.strokeDashoffset = L * (1 - eo(seg(u, 9200, 1600)));
+    $('a3').style.opacity = seg(u, 9900, 400);
+    fu($('n3'), seg(u, 10200, 600), 60);       // «وبيبعتلك التقرير على موبايلك»
+    fu($('note3'), seg(u, 14500, 700), 40);    // «وأي تعديل في الشيت…»
   }
 
   // ---- scene 4 ----
   if (t >= SC.s4[0] - FADE && t < SC.s4[1] + FADE) {
     const u = t - SC.s4[0];
-    fu($('k4'), seg(u, 150, 550), 40);
-    fu($('team'), seg(u, 800, 700), 50);
-    ['c1','c2','c3'].forEach((id, i) => pop($(id), seg(u, 1900 + i * 900, 650)));
+    fu($('k4'), seg(u, 200, 550), 40);
+    fu($('team'), seg(u, 2300, 700), 50);      // «ده فريق رقمي كامل»
+    const cardAt = [4200, 6400, 8500];         // إكسيل / مخطط بالفعلي / ٢٤-٧
+    ['c1','c2','c3'].forEach((id, i) => pop($(id), seg(u, cardAt[i], 650)));
   }
 
   // ---- scene 5 ----
   if (t >= SC.s5[0] - FADE && t < SC.s5[1] + FADE) {
     const u = t - SC.s5[0];
-    fu($('pre5'), seg(u, 200, 600), 40);
-    pop($('big5'), seg(u, 1000, 800));
-    $('u5').style.width = (eo(seg(u, 1900, 700)) * 560) + 'px';
-    fu($('post5'), seg(u, 2800, 700), 40);
+    fu($('pre5'), seg(u, 250, 600), 40);
+    pop($('big5'), seg(u, 1300, 800));         // «هتبنيه بإيدك»
+    $('u5').style.width = (eo(seg(u, 2600, 700)) * 560) + 'px';
+    fu($('post5'), seg(u, 4300, 700), 40);     // «خطوة بخطوة…»
   }
 
   // ---- scene 6 ----
   if (t >= SC.s6[0] - FADE) {
     const u = t - SC.s6[0];
     fu($('card6'), seg(u, 150, 800), 90, .95);
-    fu($('pr6'),  seg(u, 700, 500), 30);
-    fu($('wt6'),  seg(u, 1000, 600), 40);
-    fu($('inst'), seg(u, 1700, 550), 40);
-    fu($('date6'),seg(u, 2300, 550), 40);
-    const cp = seg(u, 3000, 600);
+    fu($('pr6'),  seg(u, 500, 500), 30);
+    fu($('wt6'),  seg(u, 900, 600), 40);       // «ورشة الذكاء الاصطناعي…»
+    fu($('inst'), seg(u, 2400, 550), 40);      // «مع المهندس أكرم النجار»
+    fu($('date6'),seg(u, 3900, 550), 40);      // «يومي ٢٢ و ٢٣ أغسطس»
+    const cp = seg(u, 7000, 600);              // «احجز مكانك دلوقتي»
     pop($('cta'), cp);
     if (cp >= 1) { // heartbeat pulse
-      const pulse = 1 + .035 * Math.sin((u - 3600) / 260);
+      const pulse = 1 + .035 * Math.sin((u - 7600) / 260);
       $('cta').style.transform = `scale(${pulse})`;
     }
-    fu($('seats'), seg(u, 3700, 550), 30);
+    fu($('seats'), seg(u, 9000, 550), 30);     // «الأماكن محدودة»
   }
 
   $('brand').style.opacity = c01(t / 800) * (1 - seg(t, SC.s6[0] - 200, 400));
