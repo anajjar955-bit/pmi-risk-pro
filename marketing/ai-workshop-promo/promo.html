@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>PMhouse — ورشة الذكاء الاصطناعي</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#000; }
+  #stage {
+    position:relative; width:1920px; height:1080px; overflow:hidden;
+    font-family:'Cairo', sans-serif; direction:rtl;
+    background:
+      radial-gradient(1100px 800px at 82% 10%, rgba(140,200,255,.28), transparent 65%),
+      radial-gradient(1200px 900px at 12% 92%, rgba(255,200,80,.16), transparent 60%),
+      linear-gradient(160deg,#1E4569 0%, #2B5C8F 55%, #22507E 100%);
+    color:#fff;
+  }
+  #grid {
+    position:absolute; inset:0; opacity:.4;
+    background-image:
+      linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+    background-size:90px 90px;
+  }
+  .glow { position:absolute; border-radius:50%; filter:blur(100px); }
+  #glowA { width:600px; height:600px; background:rgba(120,195,255,.30); top:-160px; right:-140px; }
+  #glowB { width:700px; height:700px; background:rgba(255,205,80,.18); bottom:-220px; left:-180px; }
+
+  #brand { position:absolute; top:28px; left:0; right:0; text-align:center; z-index:50; }
+  #brand svg { height:120px; filter:drop-shadow(0 10px 24px rgba(8,25,45,.35)); }
+
+  .scene { position:absolute; inset:0; opacity:0; }
+
+  /* ---------- shared ---------- */
+  .kicker {
+    display:inline-block; padding:8px 30px; border-radius:50px; font-weight:800;
+    font-size:34px; background:rgba(255,198,61,.18); color:#FFD873;
+    border:1px solid rgba(255,198,61,.45);
+  }
+  .h1 { font-weight:900; font-size:72px; line-height:1.35; }
+  .h2 { font-weight:800; font-size:48px; line-height:1.5; }
+  .body { font-weight:600; font-size:38px; line-height:1.6; color:#E8F2FD; }
+
+  /* ---------- scene 1 : hook ---------- */
+  #s1 .txt { position:absolute; right:110px; top:220px; width:960px; text-align:center; }
+  #clock {
+    display:inline-flex; align-items:baseline; gap:16px; font-weight:900; font-size:110px;
+    color:#fff; text-shadow:0 0 60px rgba(255,198,61,.45);
+  }
+  #clock small { font-size:46px; font-weight:800; color:#FFC63D; }
+  #cap1 { margin-top:20px; }
+  #cap2 { margin-top:46px; }
+  #cap2 .h2 { color:#fff; }
+  #cap2 .h2 b { color:#FFC63D; }
+  #phone {
+    position:absolute; left:190px; top:120px; width:420px; height:740px;
+    border-radius:56px; background:linear-gradient(180deg,#1A3A5E,#153252);
+    border:5px solid #4A6E96; box-shadow:0 36px 100px rgba(8,25,45,.55), 0 0 0 2px rgba(255,255,255,.08) inset;
+  }
+  #phone .notch { position:absolute; top:18px; left:50%; width:140px; height:28px; margin-left:-70px; border-radius:16px; background:#0D2440; }
+  #phone .ptime { position:absolute; top:95px; width:100%; text-align:center; font-weight:900; font-size:88px; color:#F2F8FF; }
+  #phone .pdate { position:absolute; top:210px; width:100%; text-align:center; font-weight:600; font-size:29px; color:#A8C2E0; }
+  #notif {
+    position:absolute; top:310px; left:22px; right:22px; border-radius:28px; padding:24px 28px;
+    background:rgba(255,255,255,.98); color:#17395E; text-align:right;
+    box-shadow:0 20px 60px rgba(8,25,45,.45);
+  }
+  #notif .nh { display:flex; align-items:center; gap:12px; font-weight:800; font-size:24px; color:#5F7591; }
+  #notif .nh .dot { width:12px; height:12px; border-radius:50%; background:#2BB98A; }
+  #notif .nt { margin-top:10px; font-weight:900; font-size:32px; }
+  #notif .nb { margin-top:5px; font-weight:600; font-size:26px; color:#4A6078; line-height:1.5; }
+
+  /* ---------- scene 2 : the old way ---------- */
+  #s2 .right { position:absolute; right:110px; top:200px; width:820px; text-align:center; }
+  #hours { margin-top:36px; font-weight:900; font-size:170px; line-height:1; color:#FF9A9A; text-shadow:0 0 70px rgba(255,120,120,.35); }
+  #hoursLbl { margin-top:4px; font-weight:800; font-size:50px; color:#FFC3C3; }
+  #manual { margin-top:30px; }
+  #list2 { position:absolute; left:130px; top:230px; width:800px; display:flex; flex-direction:column; gap:30px; }
+  .pain {
+    display:flex; align-items:center; gap:24px; text-align:right;
+    background:rgba(255,120,120,.14); border:1px solid rgba(255,150,150,.40);
+    border-radius:26px; padding:26px 34px;
+  }
+  .pain .ic { flex:0 0 auto; width:60px; height:60px; border-radius:16px; background:rgba(255,150,150,.22);
+    display:flex; align-items:center; justify-content:center; font-size:32px; }
+  .pain .tx { font-weight:700; font-size:38px; color:#FFEDEF; }
+  .pain .tx span.en { direction:ltr; unicode-bidi:embed; white-space:nowrap; }
+
+  /* ---------- scene 3 : the agent ---------- */
+  #s3 .head { position:absolute; top:130px; left:0; right:0; text-align:center; }
+  #t3 { margin-top:16px; font-weight:900; font-size:56px; line-height:1.4; }
+  #t3 b { color:#7BF0CF; }
+  #s3 .flow {
+    position:absolute; top:410px; right:70px; left:70px;
+    display:flex; align-items:stretch; justify-content:center; gap:0;
+  }
+  .node {
+    width:370px; border-radius:30px; padding:30px 28px; text-align:center;
+    background:rgba(110,231,183,.12); border:1px solid rgba(110,231,183,.42);
+    display:flex; flex-direction:column; align-items:center; gap:18px;
+  }
+  .node .ic { width:84px; height:84px; border-radius:22px; background:rgba(110,231,183,.20);
+    display:flex; align-items:center; justify-content:center; font-size:44px; }
+  .node .tx { font-weight:700; font-size:33px; line-height:1.5; color:#F0FDF8; }
+  .node .tx b { color:#8CF5D6; }
+  .node .tx span.en { direction:ltr; unicode-bidi:embed; white-space:nowrap; }
+  .arrow { width:70px; display:flex; align-items:center; justify-content:center; color:#7BF0CF; font-size:46px; font-weight:900; }
+  #dash {
+    width:450px; border-radius:30px; padding:24px 28px 20px;
+    background:#173C60; border:1px solid rgba(140,200,255,.45); text-align:right;
+    display:flex; flex-direction:column;
+  }
+  #dash .dt { display:flex; align-items:center; justify-content:space-between; }
+  #dash .dt .ti { font-weight:800; font-size:26px; color:#AECBEE; }
+  #dash .dt .dots { display:flex; gap:9px; }
+  #dash .dt .dots i { width:14px; height:14px; border-radius:50%; display:block; }
+  #dash .cwrap { margin-top:16px; flex:1; display:flex; gap:22px; align-items:flex-end; }
+  #bars { flex:1; display:flex; align-items:flex-end; gap:14px; height:170px; }
+  #bars .b { flex:1; border-radius:8px 8px 3px 3px; background:linear-gradient(180deg,#7CB8FF,#3B82F6); }
+  #scurve { flex:1.15; height:170px; }
+  #note3 { position:absolute; bottom:210px; left:0; right:0; text-align:center; }
+  #note3 .body { color:#D6F5E9; }
+  #note3 b { color:#8CF5D6; }
+
+  /* ---------- scene 4 : digital team ---------- */
+  #s4 .head { position:absolute; top:170px; left:0; right:0; text-align:center; }
+  #team { margin-top:14px; }
+  #team b { color:#FFC63D; }
+  #cards4 { position:absolute; top:480px; left:110px; right:110px; display:flex; gap:44px; justify-content:center; }
+  .tcard {
+    flex:1; max-width:560px; display:flex; flex-direction:column; align-items:center; gap:22px; text-align:center;
+    background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.26);
+    border-radius:30px; padding:44px 36px;
+  }
+  .tcard .ic { width:104px; height:104px; border-radius:26px;
+    background:linear-gradient(145deg, rgba(255,198,61,.30), rgba(255,198,61,.12));
+    border:1px solid rgba(255,198,61,.50);
+    display:flex; align-items:center; justify-content:center; font-size:52px; }
+  .tcard .tx { font-weight:800; font-size:42px; line-height:1.45; }
+  .tcard .tx small { display:block; margin-top:6px; font-weight:600; font-size:30px; color:#CBDFF5; }
+
+  /* ---------- scene 5 : reveal ---------- */
+  #s5 .wrap { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:0 100px 150px; }
+  #s5 .pre { font-weight:800; font-size:56px; color:#DBE9FA; }
+  #s5 .big { margin-top:22px; font-weight:900; font-size:135px; line-height:1.25; color:#fff; text-shadow:0 0 90px rgba(255,198,61,.45); }
+  #s5 .big b { color:#FFC63D; }
+  #u5 { height:12px; width:0; margin:26px auto 0; border-radius:10px; background:linear-gradient(90deg,#FFC63D,#FFE28A); }
+  #s5 .post { margin-top:44px; font-weight:700; font-size:42px; color:#C6DCF3; }
+
+  /* ---------- scene 6 : details / CTA ---------- */
+  #s6 .wrap { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+  #card6 {
+    width:1460px; border-radius:44px; padding:64px 80px 56px; text-align:center;
+    background:linear-gradient(170deg, rgba(255,255,255,.14), rgba(255,255,255,.06));
+    border:1px solid rgba(255,255,255,.30);
+    box-shadow:0 46px 130px rgba(8,25,45,.5);
+  }
+  #card6 .present { font-weight:800; font-size:36px; color:#FFC63D; letter-spacing:.5px; }
+  #logo6 { height:150px; display:block; margin:0 auto 10px; filter:drop-shadow(0 10px 26px rgba(8,25,45,.4)); }
+  #card6 .wt { margin-top:18px; font-weight:900; font-size:66px; line-height:1.4; }
+  #card6 .wt b { color:#FFC63D; }
+  #row6 { margin-top:32px; display:flex; gap:30px; justify-content:center; flex-wrap:wrap; }
+  #inst { display:inline-flex; align-items:center; gap:16px; padding:16px 40px; border-radius:60px;
+    background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.28); font-weight:800; font-size:40px; }
+  #date6 { display:inline-flex; align-items:center; gap:16px; padding:16px 44px; border-radius:60px;
+    background:rgba(110,231,183,.16); border:1px solid rgba(110,231,183,.5); font-weight:900; font-size:44px; color:#8CF5D6; }
+  #cta { margin-top:46px; display:inline-block; padding:26px 80px; border-radius:70px;
+    background:linear-gradient(120deg,#FFB800,#FFD84D); color:#173456; font-weight:900; font-size:50px;
+    box-shadow:0 22px 70px rgba(255,184,0,.45); }
+  #seats { margin-top:26px; font-weight:800; font-size:36px; color:#FFB3B3; }
+
+  /* ---------- presenter bar (audio-reactive) ---------- */
+  #pbar { position:absolute; left:0; right:0; bottom:0; height:230px; z-index:60; opacity:0;
+    background:linear-gradient(0deg, rgba(8,22,40,.55), rgba(8,22,40,0)); }
+  #pphoto {
+    position:absolute; right:70px; bottom:34px; width:168px; height:168px; border-radius:50%;
+    object-fit:cover; object-position:center 18%;
+    border:5px solid #FFC63D; box-shadow:0 14px 44px rgba(8,22,40,.55);
+    background:#153252;
+  }
+  #pring { position:absolute; right:62px; bottom:26px; width:184px; height:184px; border-radius:50%;
+    border:3px solid rgba(255,198,61,.9); pointer-events:none; }
+  #pwave { position:absolute; right:278px; bottom:88px; height:64px; display:flex; align-items:center; gap:9px; direction:ltr; }
+  #pwave i { display:block; width:9px; border-radius:6px; background:linear-gradient(180deg,#FFD86B,#FFB800); height:10px; }
+  #pname { position:absolute; right:420px; bottom:76px; text-align:right; }
+  #pname .n1 { font-weight:900; font-size:40px; color:#fff; }
+  #pname .n2 { font-weight:600; font-size:27px; color:#CFE1F6; margin-top:2px; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="grid"></div>
+  <div id="glowA" class="glow"></div>
+  <div id="glowB" class="glow"></div>
+
+  <svg width="0" height="0" style="position:absolute">
+    <defs>
+      <symbol id="pmlogo" viewBox="0 0 200 230">
+        <polygon points="100,4 196,60 196,170 100,226 4,170 4,60" fill="#FFFFFF" stroke="#F07818" stroke-width="9" stroke-linejoin="round"/>
+        <polygon points="100,15 186,66 186,164 100,215 14,164 14,66" fill="none" stroke="#27548F" stroke-width="4" stroke-linejoin="round"/>
+        <!-- pixel staircase -->
+        <g>
+          <rect x="22" y="138" width="13" height="13" fill="#E02418"/>
+          <rect x="40" y="123" width="13" height="13" fill="#4FA9F5"/>
+          <rect x="55" y="123" width="13" height="13" fill="#1E6FD8"/>
+          <rect x="55" y="108" width="13" height="13" fill="#4FA9F5"/>
+          <rect x="70" y="123" width="13" height="13" fill="#1E6FD8"/>
+          <rect x="70" y="108" width="13" height="13" fill="#1E6FD8"/>
+          <rect x="70" y="93"  width="13" height="13" fill="#4FA9F5"/>
+          <rect x="85" y="123" width="13" height="13" fill="#1E6FD8"/>
+          <rect x="85" y="108" width="13" height="13" fill="#1E6FD8"/>
+          <rect x="85" y="93"  width="13" height="13" fill="#1E6FD8"/>
+          <rect x="85" y="78"  width="13" height="13" fill="#4FA9F5"/>
+        </g>
+        <text x="103" y="107" style="direction:ltr" text-anchor="start" font-family="Arial, sans-serif" font-weight="900" font-size="34" fill="#1B3FA0">PM</text>
+        <text x="103" y="146" style="direction:ltr" text-anchor="start" font-family="Arial, sans-serif" font-weight="900" font-size="27" fill="#1B3FA0" textLength="82" lengthAdjust="spacingAndGlyphs">HOUSE</text>
+      </symbol>
+    </defs>
+  </svg>
+
+  <div id="brand"><svg viewBox="0 0 200 230"><use href="#pmlogo"/></svg></div>
+
+  <!-- Scene 1 -->
+  <section class="scene" id="s1">
+    <div class="txt">
+      <div id="clock">٧:٠٠ <small>الصبح ☀️</small></div>
+      <div id="cap1" class="h2">تخيّل بتفتح موبايلك أول ما تصحى…</div>
+      <div id="cap2"><div class="h2">وتلاقي تقرير المشروعات <b>مستنيك</b>…<br>من غير ما حد يعمله ✨</div></div>
+    </div>
+    <div id="phone">
+      <div class="notch"></div>
+      <div class="ptime">٧:٠٠</div>
+      <div class="pdate">الجمعة ٢٢ أغسطس</div>
+      <div id="notif">
+        <div class="nh"><span class="dot"></span> تقارير المشروعات · الآن</div>
+        <div class="nt">📊 تقرير أداء المشروعات جاهز</div>
+        <div class="nb">اتحدّث ووصلك أوتوماتيك… من غير تدخّل من حد</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Scene 2 -->
+  <section class="scene" id="s2">
+    <div class="right">
+      <div id="k2" class="kicker">زمان؟ 😮‍💨</div>
+      <div id="hours">٤ ساعات</div>
+      <div id="hoursLbl">كل أسبوع… ضايعة</div>
+      <div id="manual" class="h2">أجمّع التقرير بإيدي:</div>
+    </div>
+    <div id="list2">
+      <div class="pain" id="p1"><span class="ic">📉</span><span class="tx">نسب الإنجاز لكل مشروع</span></div>
+      <div class="pain" id="p2"><span class="ic">🧾</span><span class="tx">المستخلصات المتأخرة</span></div>
+      <div class="pain" id="p3"><span class="ic">📋</span><span class="tx">الـ <span class="en">Change Requests</span> المعلّقة</span></div>
+      <div class="pain" id="p4"><span class="ic">📐</span><span class="tx">انحراف الـ <span class="en">S-Curve</span> عن الـ <span class="en">Baseline</span></span></div>
+    </div>
+  </section>
+
+  <!-- Scene 3 -->
+  <section class="scene" id="s3">
+    <div class="head">
+      <div id="k3" class="kicker">دلوقتي 🤖</div>
+      <div id="t3">الشغل ده كله بيعمله <b>وكيل ذكي بنيته بنفسي</b></div>
+    </div>
+    <div class="flow">
+      <div class="node" id="n1"><span class="ic">📄</span><span class="tx">بيقرا <b>شيت قاعدة البيانات</b> بتاع المشروعات</span></div>
+      <div class="arrow" id="a1">←</div>
+      <div class="node" id="n2"><span class="ic">📊</span><span class="tx">بيحدّث <b>داشبورد تفاعلية</b> زي <span class="en">Power BI</span></span></div>
+      <div class="arrow" id="a2">←</div>
+      <div id="dash">
+        <div class="dt">
+          <div class="dots"><i style="background:#FF8A8A"></i><i style="background:#FFD34D"></i><i style="background:#4EE6C0"></i></div>
+          <div class="ti">Dashboard · Live</div>
+        </div>
+        <div class="cwrap">
+          <div id="bars">
+            <div class="b" id="b1"></div><div class="b" id="b2"></div><div class="b" id="b3"></div><div class="b" id="b4"></div><div class="b" id="b5"></div>
+          </div>
+          <svg id="scurve" viewBox="0 0 300 190">
+            <path d="M10,180 C90,175 150,150 190,95 C220,55 250,30 290,18" fill="none" stroke="#9DBCE0" stroke-width="4" stroke-dasharray="10 10"/>
+            <path id="sc" d="M10,180 C80,178 140,160 185,110 C225,65 255,40 290,30" fill="none" stroke="#FFC63D" stroke-width="7" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+      <div class="arrow" id="a3">←</div>
+      <div class="node" id="n3"><span class="ic">📱</span><span class="tx">وبيبعت التقرير <b>على موبايلك</b> في الميعاد اللي تختاره</span></div>
+    </div>
+    <div id="note3"><div class="body">⚡ أي تعديل في الشيت… ينعكس في التقرير <b>فورًا</b></div></div>
+  </section>
+
+  <!-- Scene 4 -->
+  <section class="scene" id="s4">
+    <div class="head">
+      <div id="k4" class="h2">ومش تقرير وخلاص…</div>
+      <div id="team" class="h1">ده <b>فريق رقمي كامل</b> شغّال معاك 👥</div>
+    </div>
+    <div id="cards4">
+      <div class="tcard" id="c1"><span class="ic">📈</span><span class="tx">يحلل ملفات الإكسيل<small>مهما كانت كبيرة أو معقدة</small></span></div>
+      <div class="tcard" id="c2"><span class="ic">⚖️</span><span class="tx">يقارن المخطط بالفعلي<small>وينبّهك للانحراف قبل ما يكبر</small></span></div>
+      <div class="tcard" id="c3"><span class="ic">🕐</span><span class="tx">يشتغل ٢٤/٧<small>من غير أخطاء… ولا إجازات</small></span></div>
+    </div>
+  </section>
+
+  <!-- Scene 5 -->
+  <section class="scene" id="s5">
+    <div class="wrap">
+      <div class="pre" id="pre5">وفي الورشة دي…</div>
+      <div class="big" id="big5">هتبنيه <b>بإيدك</b> 🛠️</div>
+      <div id="u5"></div>
+      <div class="post" id="post5">خطوة بخطوة… حتى لو أول مرة تستخدم الذكاء الاصطناعي</div>
+    </div>
+  </section>
+
+  <!-- Presenter (audio-reactive) -->
+  <div id="pbar">
+    <div id="pname"><div class="n1">م. أكرم النجار</div><div class="n2">مدرب الورشة · PMhouse</div></div>
+    <div id="pwave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div id="pring"></div>
+    <img id="pphoto" src="presenter.jpg" onerror="document.getElementById('pbar').style.display='none'">
+  </div>
+
+  <!-- Scene 6 -->
+  <section class="scene" id="s6">
+    <div class="wrap">
+      <div id="card6">
+        <div id="pr6"><svg id="logo6" viewBox="0 0 200 230"><use href="#pmlogo"/></svg><div class="present">PMhouse تقدّم</div></div>
+        <div class="wt" id="wt6">ورشة <b>الذكاء الاصطناعي</b> في إدارة المشروعات</div>
+        <div id="row6">
+          <span id="inst">👨‍🏫 مع م. أكرم النجار</span>
+          <span id="date6">📅 يومي ٢٢ و ٢٣ أغسطس</span>
+        </div>
+        <div><span id="cta">احجز مكانك دلوقتي</span></div>
+        <div id="seats">🔥 الأماكن محدودة</div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script src="amp.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const c01 = v => Math.max(0, Math.min(1, v));
+const eo  = t => 1 - Math.pow(1 - t, 3);          // ease-out cubic
+const seg = (t, s, d) => c01((t - s) / d);        // 0→1 over [s, s+d]
+
+// fade-up: progress p (0..1), rise distance dy, optional start scale
+function fu(el, p, dy = 60, sc = null) {
+  const e = eo(p);
+  el.style.opacity = p;
+  let tr = `translateY(${(1 - e) * dy}px)`;
+  if (sc != null) tr += ` scale(${sc + (1 - sc) * e})`;
+  el.style.transform = tr;
+}
+function pop(el, p) { // pop-in with slight overshoot
+  const e = eo(p);
+  el.style.opacity = p;
+  const s = p <= 0 ? .7 : .7 + .38 * e - .08 * Math.sin(e * Math.PI);
+  el.style.transform = `scale(${s})`;
+}
+
+const AR = n => n.toLocaleString('ar-EG');
+
+// scene windows [start, end] in ms — synced to the Egyptian VO paragraph starts
+const SC = { s1:[0,8200], s2:[8200,23700], s3:[23700,44700], s4:[44700,55600], s5:[55600,62900], s6:[62900,76000] };
+const DUR = 76000;
+const FADE = 450;
+
+function sceneOp(t, [a, b]) {
+  if (t < a || t >= b) return 0;
+  return c01((t - a) / FADE) * c01((b - t) / FADE);
+}
+
+function render(t) {
+  // ambient glows drift
+  $('glowA').style.transform = `translate(${Math.sin(t/4000)*40}px, ${Math.cos(t/5000)*30}px)`;
+  $('glowB').style.transform = `translate(${Math.cos(t/4500)*50}px, ${Math.sin(t/5200)*35}px)`;
+
+  for (const k in SC) {
+    const el = $(k), o = sceneOp(t, SC[k]);
+    el.style.opacity = o;
+    el.style.display = o > 0 ? 'block' : 'none';
+  }
+
+  // ---- scene 1 ----
+  if (t < SC.s1[1] + FADE) {
+    const u = t - SC.s1[0];
+    fu($('clock'), seg(u, 200, 700), 40);
+    fu($('cap1'),  seg(u, 700, 700), 50);
+    const pp = seg(u, 1400, 900);
+    $('phone').style.opacity = pp;
+    $('phone').style.transform = `translateX(${(1-eo(pp))*-140}px) scale(${.94+.06*eo(pp)})`;
+    const np = seg(u, 3300, 650);   // «تلاقي تقرير أداء المشروعات جاهز»
+    $('notif').style.opacity = np;
+    $('notif').style.transform = `translateY(${(1-eo(np))*-60}px) scale(${.92+.08*eo(np)})`;
+    fu($('cap2'), seg(u, 4100, 800), 60);
+  }
+
+  // ---- scene 2 ----
+  if (t >= SC.s2[0] - FADE && t < SC.s2[1] + FADE) {
+    const u = t - SC.s2[0];
+    fu($('k2'), seg(u, 150, 500), 30);
+    const hp = seg(u, 700, 1100);   // «كنت بضيّع أربع ساعات»
+    fu($('hours'), c01(hp*3), 30, .8);
+    $('hours').textContent = AR(Math.round(eo(hp) * 4)) + ' ساعات';
+    fu($('hoursLbl'), seg(u, 2000, 600), 30);
+    fu($('manual'), seg(u, 4000, 600), 40);  // «أجمّع التقرير بإيدي»
+    const painAt = [7800, 9100, 11000, 13100]; // each item lands on its word in the VO
+    ['p1','p2','p3','p4'].forEach((id, i) => {
+      const p = seg(u, painAt[i], 600);
+      const el = $(id);
+      el.style.opacity = p;
+      el.style.transform = `translateX(${(1 - eo(p)) * -80}px)`;
+    });
+  }
+
+  // ---- scene 3 ----
+  if (t >= SC.s3[0] - FADE && t < SC.s3[1] + FADE) {
+    const u = t - SC.s3[0];
+    fu($('k3'), seg(u, 200, 500), 30);
+    fu($('t3'), seg(u, 700, 700), 50);
+    fu($('n1'), seg(u, 4400, 600), 60);        // «بيقرا شيت قاعدة البيانات»
+    $('a1').style.opacity = seg(u, 5600, 400);
+    fu($('n2'), seg(u, 6500, 600), 60);        // «بيحدّث داشبورد تفاعلية»
+    $('a2').style.opacity = seg(u, 7600, 400);
+    fu($('dash'), seg(u, 8000, 700), 70, .95);
+    // bars grow
+    [58,86,44,72,95].forEach((h, i) => {
+      const p = eo(seg(u, 8800 + i * 180, 700));
+      $('b' + (i+1)).style.height = Math.max(4, h * p / 100 * 170) + 'px';
+    });
+    // S-curve draws
+    const sc = $('sc'), L = sc.getTotalLength();
+    sc.style.strokeDasharray = L;
+    sc.style.strokeDashoffset = L * (1 - eo(seg(u, 9200, 1600)));
+    $('a3').style.opacity = seg(u, 9900, 400);
+    fu($('n3'), seg(u, 10200, 600), 60);       // «وبيبعتلك التقرير على موبايلك»
+    fu($('note3'), seg(u, 14500, 700), 40);    // «وأي تعديل في الشيت…»
+  }
+
+  // ---- scene 4 ----
+  if (t >= SC.s4[0] - FADE && t < SC.s4[1] + FADE) {
+    const u = t - SC.s4[0];
+    fu($('k4'), seg(u, 200, 550), 40);
+    fu($('team'), seg(u, 2300, 700), 50);      // «ده فريق رقمي كامل»
+    const cardAt = [4200, 6400, 8500];         // إكسيل / مخطط بالفعلي / ٢٤-٧
+    ['c1','c2','c3'].forEach((id, i) => pop($(id), seg(u, cardAt[i], 650)));
+  }
+
+  // ---- scene 5 ----
+  if (t >= SC.s5[0] - FADE && t < SC.s5[1] + FADE) {
+    const u = t - SC.s5[0];
+    fu($('pre5'), seg(u, 250, 600), 40);
+    pop($('big5'), seg(u, 1300, 800));         // «هتبنيه بإيدك»
+    $('u5').style.width = (eo(seg(u, 2600, 700)) * 560) + 'px';
+    fu($('post5'), seg(u, 4300, 700), 40);     // «خطوة بخطوة…»
+  }
+
+  // ---- scene 6 ----
+  if (t >= SC.s6[0] - FADE) {
+    const u = t - SC.s6[0];
+    fu($('card6'), seg(u, 150, 800), 90, .95);
+    fu($('pr6'),  seg(u, 500, 500), 30);
+    fu($('wt6'),  seg(u, 900, 600), 40);       // «ورشة الذكاء الاصطناعي…»
+    fu($('inst'), seg(u, 2400, 550), 40);      // «مع المهندس أكرم النجار»
+    fu($('date6'),seg(u, 3900, 550), 40);      // «يومي ٢٢ و ٢٣ أغسطس»
+    const cp = seg(u, 7000, 600);              // «احجز مكانك دلوقتي»
+    pop($('cta'), cp);
+    if (cp >= 1) { // heartbeat pulse
+      const pulse = 1 + .035 * Math.sin((u - 7600) / 260);
+      $('cta').style.transform = `scale(${pulse})`;
+    }
+    fu($('seats'), seg(u, 9000, 550), 30);     // «الأماكن محدودة»
+  }
+
+  $('brand').style.opacity = c01(t / 800) * (1 - seg(t, SC.s6[0] - 200, 400));
+
+  // ---- presenter bar: waveform + ring driven by the VO amplitude ----
+  const fi = Math.min(AMP.length - 1, Math.max(0, Math.floor(t / 1000 * 30)));
+  const amp = typeof AMP !== 'undefined' ? AMP[fi] : 0;
+  $('pbar').style.opacity = seg(t, 600, 600) * (1 - seg(t, SC.s6[0] - 200, 400));
+  const bars = $('pwave').children;
+  for (let i = 0; i < bars.length; i++) {
+    const f = .55 + .45 * Math.sin(i * 1.7 + t / 95);
+    bars[i].style.height = Math.max(8, amp * 62 * f + amp * 10) + 'px';
+    bars[i].style.opacity = .45 + .55 * amp;
+  }
+  $('pring').style.opacity = .25 + .75 * amp;
+  $('pring').style.transform = `scale(${1 + amp * .06})`;
+  $('pphoto').style.transform = `scale(${1 + amp * .015})`;
+}
+
+window.seek = render;
+window.DUR = DUR;
+
+// live preview when opened in a normal browser (not frame-render mode)
+if (!location.search.includes('render')) {
+  const t0 = performance.now();
+  (function loop(){ render((performance.now() - t0) % DUR); requestAnimationFrame(loop); })();
+} else {
+  render(0);
+}
+</script>
+</body>
+</html>
